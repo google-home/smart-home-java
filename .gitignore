@@ -5,3 +5,8 @@
 ehthumbs.db
 Thumbs.db
 smart-home-key.json
+# Intellij
+*.iml
+*.iws
+.idea/
+build/
