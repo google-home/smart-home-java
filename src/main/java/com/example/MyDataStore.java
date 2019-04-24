@@ -19,13 +19,14 @@ package com.example;
 import com.google.actions.api.smarthome.ExecuteRequest;
 import com.google.api.core.ApiFuture;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.firestore.*;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -33,6 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MyDataStore {
 
@@ -167,6 +171,29 @@ public class MyDataStore {
 
 
         switch (execution.command) {
+        // action.devices.traits.ArmDisarm
+        case "action.devices.commands.ArmDisarm":
+            if (execution.getParams().has("arm")) {
+                states.put("isArmed", execution.getParams().get("arm"));
+            } else if (execution.getParams().has("cancel")) {
+                // Cancel value is in relation to the arm value
+                states.put("isArmed", !states.get("isArmed"));
+            }
+            if (execution.getParams().has("armLevel")) {
+                database.collection("users").document(userId)
+                    .collection("devices")
+                    .document(deviceId)
+                    .update("states.isArmed", states.get("isArmed"),
+                        "states.currentArmLevel", execution.getParams().get("armLevel"));
+                    states.put("currentArmLevel", execution.getParams().get("armLevel"));
+            } else {
+                database.collection("users").document(userId)
+                    .collection("devices")
+                    .document(deviceId)
+                    .update("isArmed", states.get("isArmed"));
+            }
+            break;
+
         // action.devices.traits.Brightness
         case "action.devices.commands.BrightnessAbsolute":
             database.collection("users").document(userId)
@@ -258,6 +285,15 @@ public class MyDataStore {
             states.put("generatedAlert", true);
             break;
 
+        // action.devices.traits.LockUnlock
+        case "action.devices.commands.LockUnlock":
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update("states.isLocked", execution.getParams().get("lock"));
+            states.put("isLocked", execution.getParams().get("lock"));
+            break;
+
         // action.devices.traits.OnOff
         case "action.devices.commands.OnOff":
             database.collection("users").document(userId)
@@ -265,6 +301,35 @@ public class MyDataStore {
                     .document(deviceId).update("states.on",
                     execution.getParams().get("on"));
             states.put("on", execution.getParams().get("on"));
+            break;
+
+
+        // action.devices.traits.OpenClose
+        case 'action.devices.commands.OpenClose':
+            // Check if the device can open in multiple directions
+            JSONObject attributes = (JSONObject) device.getData().get("attributes");
+            if (attributes != null && attributes.has("openDirection")) {
+                // The device can open in more than one direction
+                String direction = execution.getParams().get("openDirection");
+                List<JSONObject> openStates = (List<JSONObject>) states.get("openState");
+                openStates.forEach(state -> {
+                    if (state.getString("openDirection").equals(direction)) {
+                        state.put("openPercent", execution.getParams().get("openPercent"));
+                    }
+                });
+                states.put("openStates", openStates);
+                database.collection("users").document(userId)
+                    .collection("devices")
+                    .document(deviceId)
+                    .update("states.openState", openStates);
+            } else {
+                // The device can only open in one direction
+                database.collection("users").document(userId)
+                    .collection("devices")
+                    .document(deviceId)
+                    .update("states.openPercent", execution.getParams().get("openPercent"));
+                states.put("openPercent", execution.getParams().get("openPercent"));
+            }
             break;
 
         // action.devices.traits.RunCycle - No execution
@@ -306,6 +371,68 @@ public class MyDataStore {
                     .document(deviceId)
                     .update("states.currentModeSettings", currentModeSettings);
             states.put("currentModeSettings", currentModeSettings);
+            break;
+
+        // action.devices.traits.Timer
+        case "action.devices.commands.TimerStart":
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update("states.timerRemainingSec", execution.getParams().get("timerTimeSec"));
+            states.put("timerRemainingSec", execution.getParams().get("timerTimeSec"));
+            break;
+
+        case "action.devices.commands.TimerAdjust":
+            if ((int) states.get("timerRemainingSec") == -1) {
+                // No timer exists
+                throw new RuntimeException("noTimerExists");
+            }
+            int newTimerRemainingSec = (int) states.get("timerRemainingSec") +
+                (int) execution.getParams().get("timerTimeSec");
+            if (newTimerRemainingSec < 0) {
+                throw new RuntimeException("valueOutOfRange");
+            }
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update("states.timerRemainingSec", newTimerRemainingSec);
+            states.put("timerRemainingSec", newTimerRemainingSec);
+            break;
+
+        case "action.devices.commands.TimerPause":
+            if ((int) states.get("timerRemainingSec") == -1) {
+                // No timer exists
+                throw new RuntimeException("noTimerExists");
+            }
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update("states.timerPaused", true);
+            states.put("timerPaused", true);
+            break;
+
+        case "action.devices.commands.TimerResume":
+            if ((int) states.get("timerRemainingSec") == -1) {
+                // No timer exists
+                throw new RuntimeException("noTimerExists");
+            }
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update("states.timerPaused", false);
+            states.put("timerPaused", false);
+            break;
+
+        case "action.devices.commands.TimerCancel":
+            if ((int) states.get("timerRemainingSec") == -1) {
+                // No timer exists
+                throw new RuntimeException("noTimerExists");
+            }
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update("states.timerRemainingSec", -1);
+            states.put("timerRemainingSec", 0);
             break;
 
         // action.devices.traits.Toggles
