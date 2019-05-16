@@ -51,13 +51,14 @@ public class MySmartHomeApp extends SmartHomeApp {
         database.setHomegraph(userId, true);
         List<QueryDocumentSnapshot> devices = database.getDevices(userId);
         int numOfDevices = devices.size();
-        response.payload.devices = new DeviceProto.Device[numOfDevices];
+        response.payload.devices = new SyncResponse.Payload.Device[numOfDevices];
         for (int i = 0; i < numOfDevices; i++) {
             QueryDocumentSnapshot device = devices.get(i);
-            DeviceProto.Device.Builder deviceBuilder = DeviceProto.Device.newBuilder()
+            SyncResponse.Payload.Device.Builder deviceBuilder =
+                new SyncResponse.Payload.Device.Builder()
                     .setId(device.getId())
                     .setType((String) device.get("type"))
-                    .addAllTraits((List<String>) device.get("traits"))
+                    .setTraits((List<String>) device.get("traits"))
                     .setName(DeviceProto.DeviceNames.newBuilder()
                             .addAllDefaultNames((List<String>) device.get("defaultNames"))
                             .setName((String) device.get("name"))
@@ -82,7 +83,7 @@ public class MySmartHomeApp extends SmartHomeApp {
                 } catch (Exception e) {
                     LOGGER.error("FAILED TO BUILD");
                 }
-                deviceBuilder.setAttributes(attributeBuilder);
+                deviceBuilder.setAttributes(attributeBuilder.build());
             }
             if (device.contains("customData")) {
                 Map<String, Object> customData = new HashMap<>();
@@ -160,8 +161,10 @@ public class MySmartHomeApp extends SmartHomeApp {
         commandsResponse.add(successfulCommands);
 
         res.requestId = executeRequest.requestId;
-        res.setPayload(new ExecuteResponse.Payload());
-        res.payload.commands = commandsResponse.toArray(new ExecuteResponse.Payload.Commands[]{});
+        ExecuteResponse.Payload payload = new ExecuteResponse.Payload(
+            commandsResponse.toArray(new ExecuteResponse.Payload.Commands[]{})
+        );
+        res.setPayload(payload);
 
         return res;
     }

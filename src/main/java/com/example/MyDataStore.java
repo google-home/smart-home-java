@@ -173,13 +173,15 @@ public class MyDataStore {
         switch (execution.command) {
         // action.devices.traits.ArmDisarm
         case "action.devices.commands.ArmDisarm":
-            if (execution.getParams().has("arm")) {
-                states.put("isArmed", execution.getParams().get("arm"));
-            } else if (execution.getParams().has("cancel")) {
+            if (execution.getParams().containsKey("arm")) {
+                boolean isArmed = (boolean) execution.getParams().get("arm");
+                states.put("isArmed", isArmed);
+            } else if (execution.getParams().containsKey("cancel")) {
                 // Cancel value is in relation to the arm value
-                states.put("isArmed", !states.get("isArmed"));
+                boolean isArmed = (boolean) execution.getParams().get("arm");
+                states.put("isArmed", !isArmed);
             }
-            if (execution.getParams().has("armLevel")) {
+            if (execution.getParams().containsKey("armLevel")) {
                 database.collection("users").document(userId)
                     .collection("devices")
                     .document(deviceId)
@@ -305,12 +307,12 @@ public class MyDataStore {
 
 
         // action.devices.traits.OpenClose
-        case 'action.devices.commands.OpenClose':
+        case "action.devices.commands.OpenClose":
             // Check if the device can open in multiple directions
             JSONObject attributes = (JSONObject) device.getData().get("attributes");
             if (attributes != null && attributes.has("openDirection")) {
                 // The device can open in more than one direction
-                String direction = execution.getParams().get("openDirection");
+                String direction = (String) execution.getParams().get("openDirection");
                 List<JSONObject> openStates = (List<JSONObject>) states.get("openState");
                 openStates.forEach(state -> {
                     if (state.getString("openDirection").equals(direction)) {
