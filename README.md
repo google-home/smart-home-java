@@ -19,11 +19,11 @@ Specifically, there are four intents that must be implemented:
 
 1. Use the [Actions on Google Console](https://console.actions.google.com) to add a new project with a name of your choosing and click **Create Project**.
 1. Click **Home Control**, then click **Smart Home**.
-1. On the left navigation menu under **SETUP**, click on **Invocation**.
+1. From the top menu under **Develop**, click on **Invocation** (left nav).
 1. Add your App's name. Click **Save**.
 
 Optionally, you can add directory information as well:
-1. On the left navigation menu under **DEPLOY**, click on **Directory Information**.
+1. From the top menu under **Deploy**, click on **Directory Information** (left nav).
 1. Add your App info, including images, a contact email and privacy policy. This information can all be edited before submitting for review.
 1. Click **Save**.
 
@@ -44,9 +44,9 @@ account credentials.
 #### Start testing
 
 1. Navigate back to the [Actions on Google Console](https://console.actions.google.com).
-1. On the left navigation menu under **BUILD**, click on **Actions**. Click on **Add Your First Action** and choose your app's language(s).
+1. From the top menu under **Develop**, click on **Actions** (left nav). Click on **Add your first action** and choose your app's language(s).
 1. Enter the URL for fulfillment, e.g. https://xyz123.appspot.com/smarthome, click **Done**.
-1. On the left navigation menu under *ADVANCED OPTIONS**, click on **Account Linking**.
+1. From the top menu under **Develop**, click on **Account Linking** (left nav).
 1. Select **No, I only want to allow account creation on my website**. Click **Next**.
 1. For Linking Type, select **OAuth**.
 1. For Grant Type, select 'Authorization Code' for Grant Type.
