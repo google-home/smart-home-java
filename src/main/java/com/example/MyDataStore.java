@@ -117,7 +117,7 @@ public class MyDataStore {
     }
 
     public void updateDevice(String userId, String deviceId, String deviceName,
-            String deviceNickname, Map<String, Object> states) {
+            String deviceNickname, Map<String, Object> states, String errorCode) {
         DocumentReference device =
                 database.collection("users").document(userId)
                         .collection("devices")
@@ -130,6 +130,9 @@ public class MyDataStore {
         }
         if (states != null) {
             device.update("states", states);
+        }
+        if (errorCode != null) {
+            device.update("errorCode", errorCode);
         }
     }
 
@@ -169,6 +172,13 @@ public class MyDataStore {
             states.putAll(deviceStates);
         }
 
+        if (!(Boolean) states.get("online")) {
+            throw new Exception("deviceOffline");
+        }
+
+        if (!device.getString("errorCode").isEmpty()) {
+            throw new Exception(device.getString("errorCode"));
+        }
 
         switch (execution.command) {
         // action.devices.traits.ArmDisarm
