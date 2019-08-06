@@ -75,8 +75,9 @@ public class SmartHomeUpdateServlet extends HttpServlet {
                 new Gson().fromJson(bodyJson.getJSONObject("states").toString(), HashMap.class) :
                 null;
         String errorCode = bodyJson.has("errorCode") ? bodyJson.getString("errorCode") : null;
+        String tfa = bodyJson.has("tfa") ? bodyJson.getString("tfa") : null;
         try {
-            database.updateDevice(userId, deviceId, deviceName, deviceNickname, deviceStates, errorCode);
+            database.updateDevice(userId, deviceId, deviceName, deviceNickname, deviceStates, errorCode, tfa);
 
             JSONObject statesJson = new JSONObject(deviceStates);
             Struct.Builder statesStruct = Struct.newBuilder();
