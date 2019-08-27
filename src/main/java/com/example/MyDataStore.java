@@ -117,7 +117,7 @@ public class MyDataStore {
     }
 
     public void updateDevice(String userId, String deviceId, String deviceName,
-            String deviceNickname, Map<String, Object> states) {
+            String deviceNickname, Map<String, Object> states, String errorCode, String tfa) {
         DocumentReference device =
                 database.collection("users").document(userId)
                         .collection("devices")
@@ -130,6 +130,12 @@ public class MyDataStore {
         }
         if (states != null) {
             device.update("states", states);
+        }
+        if (errorCode != null) {
+            device.update("errorCode", errorCode);
+        }
+        if (tfa != null) {
+            device.update("tfa", tfa);
         }
     }
 
@@ -169,6 +175,24 @@ public class MyDataStore {
             states.putAll(deviceStates);
         }
 
+        if (!(Boolean) states.get("online")) {
+            throw new Exception("deviceOffline");
+        }
+
+        if (!device.getString("errorCode").isEmpty()) {
+            throw new Exception(device.getString("errorCode"));
+        }
+
+        if (device.getString("tfa").equals("ack") && execution.getChallenge() == null) {
+            throw new Exception("ackNeeded");
+        } else if (!device.getString("tfa").isEmpty() && execution.getChallenge() == null) {
+            throw new Exception("pinNeeded");
+        } else if (!device.getString("tfa").isEmpty() && execution.getChallenge() != null) {
+          String pin = (String) execution.getChallenge().get("pin");
+          if (pin != null && !pin.equals(device.getString("tfa"))) {
+            throw new Exception("challengeFailedPinNeeded");
+          }
+        }
 
         switch (execution.command) {
         // action.devices.traits.ArmDisarm

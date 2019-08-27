@@ -143,6 +143,46 @@ public class MySmartHomeApp extends SmartHomeApp {
                     states = database.execute(userId, device.id, command.execution[0]);
                     successfulDevices.add(device.id);
                 } catch (Exception e) {
+                    if (e.getMessage().equals("pinNeeded")) {
+                        ExecuteResponse.Payload.Commands failedDevice =
+                            new ExecuteResponse.Payload.Commands();
+                        failedDevice.ids = new String[]{device.id};
+                        failedDevice.status = "ERROR";
+                        failedDevice.setErrorCode("challengeNeeded");
+                        failedDevice.setChallengeNeeded(new HashMap<String, String>() {{
+                            put("type", "pinNeeded");
+                        }});
+                        failedDevice.setErrorCode(e.getMessage());
+                        commandsResponse.add(failedDevice);
+                        continue;
+                    }
+                    if (e.getMessage().equals("challengeFailedPinNeeded")) {
+                        ExecuteResponse.Payload.Commands failedDevice =
+                            new ExecuteResponse.Payload.Commands();
+                        failedDevice.ids = new String[]{device.id};
+                        failedDevice.status = "ERROR";
+                        failedDevice.setErrorCode("challengeNeeded");
+                        failedDevice.setChallengeNeeded(new HashMap<String, String>() {{
+                            put("type", "challengeFailedPinNeeded");
+                        }});
+                        failedDevice.setErrorCode(e.getMessage());
+                        commandsResponse.add(failedDevice);
+                        continue;
+                    }
+                    if (e.getMessage().equals("ackNeeded")) {
+                        ExecuteResponse.Payload.Commands failedDevice =
+                            new ExecuteResponse.Payload.Commands();
+                        failedDevice.ids = new String[]{device.id};
+                        failedDevice.status = "ERROR";
+                        failedDevice.setErrorCode("challengeNeeded");
+                        failedDevice.setChallengeNeeded(new HashMap<String, String>() {{
+                            put("type", "ackNeeded");
+                        }});
+                        failedDevice.setErrorCode(e.getMessage());
+                        commandsResponse.add(failedDevice);
+                        continue;
+                    }
+
                     ExecuteResponse.Payload.Commands failedDevice =
                             new ExecuteResponse.Payload.Commands();
                     failedDevice.ids = new String[]{device.id};
