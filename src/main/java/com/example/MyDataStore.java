@@ -358,6 +358,24 @@ public class MyDataStore {
             }
             break;
 
+        // action.devices.traits.Rotation
+        case "action.devices.commands.RotateAbsolute":
+            // Check if the device can open in multiple directions
+            if (execution.getParams().containsKey("rotationPercent")) {
+                database.collection("users").document(userId)
+                    .collection("devices")
+                    .document(deviceId)
+                    .update("states.rotationPercent", execution.getParams().get("rotationPercent"));
+                states.put("rotationPercent", execution.getParams().get("rotationPercent"));
+            } else if (execution.getParams().containsKey("rotationDegrees")) {
+                database.collection("users").document(userId)
+                    .collection("devices")
+                    .document(deviceId)
+                    .update("states.rotationDegrees", execution.getParams().get("rotationDegrees"));
+                states.put("rotationDegrees", execution.getParams().get("rotationDegrees"));
+            }
+            break;
+
         // action.devices.traits.RunCycle - No execution
         // action.devices.traits.Scene
         case "action.devices.commands.ActivateScene":
