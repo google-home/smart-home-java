@@ -30,6 +30,7 @@ import com.google.firebase.cloud.FirestoreClient;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -393,6 +394,17 @@ public class MyDataStore {
                     .update("states.deactivate", execution.getParams()
                             .get("deactivate"));
             // Scenes are stateless
+            break;
+
+        // action.devices.traits.SoftwareUpdate
+        case "action.devices.commands.SoftwareUpdate":
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update(new HashMap<String, Object>() {{
+                    put("states.online", false);
+                    put("states.lastSoftwareUpdateUnixTimestampSec", new Date().getTime() / 1000);
+                }});
             break;
 
         // action.devices.traits.StartStop
