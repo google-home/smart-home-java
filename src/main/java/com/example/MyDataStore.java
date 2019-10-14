@@ -358,6 +358,14 @@ public class MyDataStore {
             }
             break;
 
+        // action.devices.traits.Reboot
+        case "action.devices.commands.Reboot":
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update("states.online", false);
+            break;
+
         // action.devices.traits.Rotation
         case "action.devices.commands.RotateAbsolute":
             // Check if the device can open in multiple directions
