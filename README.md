@@ -4,7 +4,7 @@ This sample to help you get started quickly with the Java smart home library for
 
 ## Setup Instructions
 
-See the developer guide and release notes at https://developers.google.com/actions/ for more details.
+See the developer guide and release notes at [https://developers.google.com/assistant](https://developers.google.com/assistant) for more details.
 
 ### Fulfillment
 All smart home intents are located inside the `MySmartHomeApp` class which extends `SmartHomeApp`.
@@ -110,12 +110,12 @@ Copy the name of this project from the Action Console project settings page.
     IntelliJ by opening the Gradle tray and running the appEngineDeploy task. This will start the process to deploy the fulfillment code to Google Cloud App Engine.
 
 
-For more detailed information on deployment, see the [documentation](https://developers.google.com/actions/dialogflow/deploy-fulfillment).
+For more detailed information on deployment, see the [documentation](https://developers.google.com/assistant/actions/dialogflow/deploy-fulfillment).
 
 ## References & Issues
-+ Questions? Go to [StackOverflow](https://stackoverflow.com/questions/tagged/actions-on-google), [Assistant Developer Community on Reddit](https://www.reddit.com/r/GoogleAssistantDev/) or [Support](https://developers.google.com/actions/support/).
++ Questions? Go to [StackOverflow](https://stackoverflow.com/questions/tagged/actions-on-google), [Assistant Developer Community on Reddit](https://www.reddit.com/r/GoogleAssistantDev/) or [Support](https://developers.google.com/assistant/support).
 + For bugs, please report an issue on Github.
-+ Actions on Google [Documentation](https://developers.google.com/actions/extending-the-assistant)
++ Actions on Google [Documentation](https://developers.google.com/assistant)
 + Actions on Google [Codelabs](https://codelabs.developers.google.com/?cat=Assistant).
 
 ## How to make contributions?
