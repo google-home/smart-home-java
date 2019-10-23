@@ -302,6 +302,28 @@ public class MyDataStore {
                     true);
             break;
 
+        // action.devices.traits.Fill
+        case "action.devices.commands.Fill":
+            Map<String, Object> updates = new HashMap<>();
+            String currentFillLevel = "none";
+            boolean fill = (boolean) execution.getParams().get("fill");
+            if (fill) {
+                if (execution.getParams().containsKey("fillLevel")) {
+                    currentFillLevel = (String) execution.getParams().get("fillLevel");
+                } else {
+                    currentFillLevel = "half"; // Default fill level
+                }
+            } // Else the device is draining and the fill level is set to "none" by default
+            updates.put("states.isFilled", fill);
+            updates.put("states.currentFillLevel", currentFillLevel);
+            database.collection("users").document(userId)
+                    .collection("devices")
+                    .document(deviceId)
+                    .update(updates);
+            states.put("isFilled", fill);
+            states.put("currentFillLevel", currentFillLevel);
+            break;
+
         // action.devices.traits.Locator
         case "action.devices.commands.Locate":
             database.collection("users").document(userId)
