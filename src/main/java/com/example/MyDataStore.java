@@ -358,6 +358,15 @@ public class MyDataStore {
             states.put("currentFillLevel", currentFillLevel);
             break;
 
+        // action.devices.traits.HumiditySetting
+        case "action.devices.commands.SetHumidity":
+            database.collection("users").document(userId)
+                .collection("devices")
+                .document(deviceId)
+                .update("states.humiditySetpointPercent", execution.getParams().get("humiditySetpointPercent"));
+            states.put("humiditySetpointPercent", execution.getParams().get("humiditySetpointPercent"));
+            break;
+
         // action.devices.traits.Locator
         case "action.devices.commands.Locate":
             database.collection("users").document(userId)
