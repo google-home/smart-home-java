@@ -277,6 +277,40 @@ public class MyDataStore {
             states.put(colorType, color);
             break;
 
+        // action.devices.traits.Dispense
+        case "action.devices.commands.Dispense":
+          int amount = (int) execution.getParams().get("amount");
+          String unit = (String) execution.getParams().get("unit");
+          if (execution.getParams().containsKey("presetName") &&
+              execution.getParams().get("presetName").equals("cat food bowl")) {
+            // Fill in params
+            amount = 4;
+            unit = "CUPS";
+          }
+          Map<String, Object> amountLastDispensed = new HashMap();
+          amountLastDispensed.put("amount", amount);
+          amountLastDispensed.put("unit", unit);
+          Map<String, Object> dispenseUpdates = new HashMap<>();
+          dispenseUpdates.put("states.dispenseItems", new HashMap[] {
+              new HashMap<String, Object>() {{
+                  put("itemName", execution.getParams().get("item"));
+                  put("amountLastDispensed", amountLastDispensed);
+                  put("isCurrentlyDispensing", execution.getParams().containsKey("presetName"));
+              }}
+          });
+          database.collection("users").document(userId)
+              .collection("devices")
+              .document(deviceId)
+              .update(dispenseUpdates);
+          states.put("dispenseItems", new HashMap[] {
+              new HashMap<String, Object>() {{
+                put("itemName", execution.getParams().get("item"));
+                put("amountLastDispensed", amountLastDispensed);
+                put("isCurrentlyDispensing", execution.getParams().containsKey("presetName"));
+              }}
+          });
+        break;
+
         // action.devices.traits.Dock
         case "action.devices.commands.Dock":
             // This has no parameters
