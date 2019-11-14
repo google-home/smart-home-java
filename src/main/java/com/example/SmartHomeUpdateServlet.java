@@ -80,6 +80,14 @@ public class SmartHomeUpdateServlet extends HttpServlet {
             database.updateDevice(userId, deviceId, deviceName, deviceNickname, deviceStates, errorCode, tfa);
 
             JSONObject statesJson = new JSONObject(deviceStates);
+            // Do state name replacement for ColorSetting trait
+            // See https://developers.google.com/assistant/smarthome/traits/colorsetting#device-states
+            if (statesJson.has("color") &&
+                    statesJson.getJSONObject("color").has("spectrumRgb")) {
+                statesJson.getJSONObject("color")
+                    .put("spectrumRGB", statesJson.getJSONObject("color").get("spectrumRgb"));
+                statesJson.getJSONObject("color").remove("spectrumRgb");
+            }
             Struct.Builder statesStruct = Struct.newBuilder();
             try {
                 JsonFormat.parser().ignoringUnknownFields()
@@ -87,7 +95,6 @@ public class SmartHomeUpdateServlet extends HttpServlet {
             } catch (Exception e) {
                 LOGGER.error("FAILED TO BUILD");
             }
-
 
             HomeGraphApiServiceProto.ReportStateAndNotificationDevice.Builder deviceBuilder =
                     HomeGraphApiServiceProto.ReportStateAndNotificationDevice.newBuilder()
