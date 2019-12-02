@@ -103,7 +103,7 @@ public class MySmartHomeApp extends SmartHomeApp {
         QueryRequest.Inputs.Payload.Device[] devices = ((QueryRequest.Inputs)
                 queryRequest.getInputs()[0]).payload.devices;
         String userId = getUserId(headers);
-        Map<String, Map<String, Object>> deviceStates = new HashMap<>();
+        Map<String, Object> deviceStates = new HashMap<>();
         QueryResponse res = new QueryResponse();
         res.setRequestId(queryRequest.requestId);
         res.setPayload(new QueryResponse.Payload());
@@ -118,6 +118,7 @@ public class MySmartHomeApp extends SmartHomeApp {
                 deviceStates.put(device.id, failedDevice);
             }
         }
+        deviceStates.put("status", "SUCCESS");
         res.payload.setDevices(deviceStates);
 
         return res;
