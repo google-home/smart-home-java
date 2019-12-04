@@ -277,6 +277,54 @@ public class MyDataStore {
             states.put(colorType, color);
             break;
 
+        // action.devices.traits.Cook
+        case "action.devices.commands.Cook":
+            boolean startCooking = (boolean) execution.getParams().get("start");
+            if (startCooking) {
+                // Start cooking
+                Map<String, Object> dbStates = new HashMap<String, Object>() {{
+                    put("states.currentCookingMode", execution.getParams().get("cookingMode"));
+                }};
+                if (execution.getParams().containsKey("foodPreset")) {
+                    dbStates.put("states.currentFoodPreset", execution.getParams().get("foodPreset"));
+                } else {
+                    dbStates.put("states.currentFoodPreset", "NONE");
+                }
+                if (execution.getParams().containsKey("quantity")) {
+                    dbStates.put("states.currentFoodQuantity", execution.getParams().get("quantity"));
+                } else {
+                    dbStates.put("states.currentFoodQuantity", 0);
+                }
+                if (execution.getParams().containsKey("unit")) {
+                    dbStates.put("states.currentFoodUnit", execution.getParams().get("unit"));
+                } else {
+                    dbStates.put("states.currentFoodUnit", "NONE");
+                }
+                database.collection("users").document(userId)
+                    .collection("devices")
+                    .document("deviceId")
+                    .update(dbStates);
+                // Server getting response will handle any undefined values
+                states.put("currentCookingMode", execution.getParams().get("cookingMode"));
+                states.put("currentFoodPreset", execution.getParams().get("foodPreset"));
+                states.put("currentFoodQuantity", execution.getParams().get("quantity"));
+                states.put("currentFoodUnit", execution.getParams().get("unit"));
+            } else {
+                // Done cooking, reset
+                database.collection("users").document(userId)
+                    .collection("devices")
+                    .document("deviceId")
+                    .update(new HashMap<String, Object>() {{
+                        put("states.currentCookingMode", "NONE");
+                        put("states.currentFoodPreset", "NONE");
+                        put("states.currentFoodQuantity", 0);
+                        put("states.currentFoodUnit", "NONE");
+                    }});
+                states.put("currentCookingMode", "NONE");
+                states.put("currentFoodPreset", "NONE");
+            }
+            break;
+
         // action.devices.traits.Dispense
         case "action.devices.commands.Dispense":
           int amount = (int) execution.getParams().get("amount");
