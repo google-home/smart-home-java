@@ -69,7 +69,7 @@ to create the project in the Actions Console, enter your Assistant settings.
 1. Log in to your service.
 1. Start using the Google Assistant in the Actions Console to control your devices. Try saying 'turn
  my lights on'.
-1. (Optionial) You can also follow the setup for a local frontend to test adding and testing devices
+1. (Optional) You can also follow the setup for a local frontend to test adding and testing devices
  here: git clone https://github.com/actions-on-google/smart-home-frontend.git
 
 Assistant will only provide you control over items that are registered, so if you visit your front
