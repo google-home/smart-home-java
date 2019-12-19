@@ -103,24 +103,25 @@ public class MySmartHomeApp extends SmartHomeApp {
         QueryRequest.Inputs.Payload.Device[] devices = ((QueryRequest.Inputs)
                 queryRequest.getInputs()[0]).payload.devices;
         String userId = getUserId(headers);
-        Map<String, Object> deviceStates = new HashMap<>();
+        Map<String, Map<String, Object>> deviceStates = new HashMap<>();
         QueryResponse res = new QueryResponse();
         res.setRequestId(queryRequest.requestId);
         res.setPayload(new QueryResponse.Payload());
 
         for (QueryRequest.Inputs.Payload.Device device : devices) {
             try {
-                deviceStates.put(device.id, database.getState(userId, device.id));
+                Map<String, Object> deviceState = database.getState(userId, device.id);
+                deviceState.put("status", "SUCCESS");
+                deviceStates.put(device.id, deviceState);
             } catch (Exception e) {
-                LOGGER.error("QUERY FAILED");
+                LOGGER.error("QUERY FAILED: {}", e);
                 Map<String, Object> failedDevice = new HashMap<>();
-                failedDevice.put("errorCode", e.getMessage());
+                failedDevice.put("status", "ERROR");
+                failedDevice.put("errorCode", "deviceOffline");
                 deviceStates.put(device.id, failedDevice);
             }
         }
-        deviceStates.put("status", "SUCCESS");
         res.payload.setDevices(deviceStates);
-
         return res;
     }
 
