@@ -10,3 +10,4 @@ smart-home-key.json
 *.iws
 .idea/
 build/
+.gradle/

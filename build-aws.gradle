@@ -30,7 +30,7 @@ repositories {
 
 dependencies {
     // AWS - https://mvnrepository.com/artifact/com.amazonaws/aws-lambda-java-core
-    compile group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.0'
+    implementation group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.0'
 }
 
 task buildAWSZip(type: Zip) {
