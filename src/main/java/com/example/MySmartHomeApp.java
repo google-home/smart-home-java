@@ -89,7 +89,7 @@ public class MySmartHomeApp extends SmartHomeApp {
                 Map<String, Object> customData = new HashMap<>();
                 customData.putAll((Map<String, Object>) device.get("customData"));
                 JSONObject customDataJson = new JSONObject(customData);
-                deviceBuilder.setCustomData(customDataJson.toString());
+                deviceBuilder.setCustomData(customDataJson);
             }
             response.payload.devices[i] = deviceBuilder.build();
         }
