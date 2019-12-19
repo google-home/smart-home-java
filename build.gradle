@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 apply plugin: 'java'
-apply plugin: 'kotlin'
 
 apply from: 'build-aws.gradle'
 apply from: 'build-gcp.gradle'
 
 buildscript {
-    ext.kotlin_version = '1.3.61'
-
     repositories {
         mavenCentral()
     }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
 }
-
 
 sourceCompatibility = 1.8
 
@@ -42,8 +35,6 @@ configurations.all {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-
     implementation 'com.google.firebase:firebase-admin:6.7.0'
 
     implementation group: 'com.google.actions', name: 'actions-on-google', version: '1.1.0'
@@ -62,11 +53,4 @@ dependencies {
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
     implementation group: 'org.slf4j', name:'slf4j-log4j12', version: '1.7.25'
 
-}
-
-compileKotlin {
-    kotlinOptions.jvmTarget = "1.8"
-}
-compileTestKotlin {
-    kotlinOptions.jvmTarget = "1.8"
 }
