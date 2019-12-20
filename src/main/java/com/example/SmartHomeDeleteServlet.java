@@ -19,7 +19,8 @@ package com.example;
 
 import com.google.actions.api.smarthome.SmartHomeApp;
 import com.google.auth.oauth2.GoogleCredentials;
-import org.json.JSONObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,9 +63,9 @@ public class SmartHomeDeleteServlet extends HttpServlet {
         String body = req.getReader().lines().collect(Collectors.joining());
         LOGGER.info("doPost, body = {}", body);
         Map<String, String> headerMap = getHeaderMap(req);
-        JSONObject bodyJson = new JSONObject(body);
-        database.deleteDevice(bodyJson.getString("userId"),
-                bodyJson.getString("deviceId"));
+        JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
+        database.deleteDevice(bodyJson.get("userId").getAsString(),
+            bodyJson.get("deviceId").getAsString());
         actionsApp.requestSync("1836.15267389");
         res.setHeader("Access-Control-Allow-Origin", "*");
         res.setContentType("text/plain");

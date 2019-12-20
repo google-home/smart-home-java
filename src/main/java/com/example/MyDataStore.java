@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -447,13 +446,13 @@ public class MyDataStore {
         // action.devices.traits.OpenClose
         case "action.devices.commands.OpenClose":
             // Check if the device can open in multiple directions
-            JSONObject attributes = (JSONObject) device.getData().get("attributes");
-            if (attributes != null && attributes.has("openDirection")) {
+            Map<String, Object> attributes = (Map<String, Object>)device.getData().get("attributes");
+            if (attributes != null && attributes.containsKey("openDirection")) {
                 // The device can open in more than one direction
                 String direction = (String) execution.getParams().get("openDirection");
-                List<JSONObject> openStates = (List<JSONObject>) states.get("openState");
+                List<Map<String, Object>> openStates = (List<Map<String, Object>>) states.get("openState");
                 openStates.forEach(state -> {
-                    if (state.getString("openDirection").equals(direction)) {
+                    if (state.get("openDirection").equals(direction)) {
                         state.put("openPercent", execution.getParams().get("openPercent"));
                     }
                 });

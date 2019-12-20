@@ -19,11 +19,11 @@ package com.example;
 
 import com.google.actions.api.smarthome.*;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.gson.Gson;
 import com.google.home.graph.v1.DeviceProto;
 import com.google.protobuf.Struct;
 import com.google.protobuf.util.JsonFormat;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,11 +75,11 @@ public class MySmartHomeApp extends SmartHomeApp {
             if (device.contains("attributes")) {
                 Map<String, Object> attributes = new HashMap<>();
                 attributes.putAll((Map<String, Object>) device.get("attributes"));
-                JSONObject attributesJson = new JSONObject(attributes);
+                String attributesJson = new Gson().toJson(attributes);
                 Struct.Builder attributeBuilder = Struct.newBuilder();
                 try {
                     JsonFormat.parser().ignoringUnknownFields()
-                            .merge(attributesJson.toString(), attributeBuilder);
+                            .merge(attributesJson, attributeBuilder);
                 } catch (Exception e) {
                     LOGGER.error("FAILED TO BUILD");
                 }
@@ -88,7 +88,9 @@ public class MySmartHomeApp extends SmartHomeApp {
             if (device.contains("customData")) {
                 Map<String, Object> customData = new HashMap<>();
                 customData.putAll((Map<String, Object>) device.get("customData"));
-                JSONObject customDataJson = new JSONObject(customData);
+                // TODO(proppy): remove once
+                // https://github.com/actions-on-google/actions-on-google-java/issues/43 is fixed.
+                String customDataJson = new Gson().toJson(customData);
                 deviceBuilder.setCustomData(customDataJson);
             }
             response.payload.devices[i] = deviceBuilder.build();
