@@ -78,38 +78,39 @@ public class SmartHomeUpdateServlet extends HttpServlet {
         String tfa = bodyJson.has("tfa") ? bodyJson.getString("tfa") : null;
         try {
             database.updateDevice(userId, deviceId, deviceName, deviceNickname, deviceStates, errorCode, tfa);
+            if (deviceStates != null) {
+                JSONObject statesJson = new JSONObject(deviceStates);
+                // Do state name replacement for ColorSetting trait
+                // See https://developers.google.com/assistant/smarthome/traits/colorsetting#device-states
+                if (statesJson.has("color") &&
+                        statesJson.getJSONObject("color").has("spectrumRgb")) {
+                    statesJson.getJSONObject("color")
+                        .put("spectrumRGB", statesJson.getJSONObject("color").get("spectrumRgb"));
+                    statesJson.getJSONObject("color").remove("spectrumRgb");
+                }
+                Struct.Builder statesStruct = Struct.newBuilder();
+                try {
+                    JsonFormat.parser().ignoringUnknownFields()
+                            .merge(statesJson.toString(), statesStruct);
+                } catch (Exception e) {
+                    LOGGER.error("FAILED TO BUILD");
+                }
 
-            JSONObject statesJson = new JSONObject(deviceStates);
-            // Do state name replacement for ColorSetting trait
-            // See https://developers.google.com/assistant/smarthome/traits/colorsetting#device-states
-            if (statesJson.has("color") &&
-                    statesJson.getJSONObject("color").has("spectrumRgb")) {
-                statesJson.getJSONObject("color")
-                    .put("spectrumRGB", statesJson.getJSONObject("color").get("spectrumRgb"));
-                statesJson.getJSONObject("color").remove("spectrumRgb");
+                HomeGraphApiServiceProto.ReportStateAndNotificationDevice.Builder deviceBuilder =
+                        HomeGraphApiServiceProto.ReportStateAndNotificationDevice.newBuilder()
+                                .setStates(Struct.newBuilder().putFields(deviceId,
+                                        Value.newBuilder().setStructValue(statesStruct).build()));
+
+                HomeGraphApiServiceProto.ReportStateAndNotificationRequest request =
+                        HomeGraphApiServiceProto.ReportStateAndNotificationRequest.newBuilder()
+                                .setRequestId(String.valueOf(Math.random()))
+                                .setAgentUserId("1836.15267389") // our single user's id
+                                .setPayload(HomeGraphApiServiceProto.
+                                        StateAndNotificationPayload.newBuilder()
+                                        .setDevices(deviceBuilder)).build();
+
+                actionsApp.reportState(request);
             }
-            Struct.Builder statesStruct = Struct.newBuilder();
-            try {
-                JsonFormat.parser().ignoringUnknownFields()
-                        .merge(statesJson.toString(), statesStruct);
-            } catch (Exception e) {
-                LOGGER.error("FAILED TO BUILD");
-            }
-
-            HomeGraphApiServiceProto.ReportStateAndNotificationDevice.Builder deviceBuilder =
-                    HomeGraphApiServiceProto.ReportStateAndNotificationDevice.newBuilder()
-                            .setStates(Struct.newBuilder().putFields(deviceId,
-                                    Value.newBuilder().setStructValue(statesStruct).build()));
-
-            HomeGraphApiServiceProto.ReportStateAndNotificationRequest request =
-                    HomeGraphApiServiceProto.ReportStateAndNotificationRequest.newBuilder()
-                            .setRequestId(String.valueOf(Math.random()))
-                            .setAgentUserId("1836.15267389") // our single user's id
-                            .setPayload(HomeGraphApiServiceProto.
-                                    StateAndNotificationPayload.newBuilder()
-                                    .setDevices(deviceBuilder)).build();
-
-            actionsApp.reportState(request);
         } catch (Exception e) {
             LOGGER.error("failed to update device");
             throw e;
@@ -136,5 +137,3 @@ public class SmartHomeUpdateServlet extends HttpServlet {
 
     }
 }
-
-
