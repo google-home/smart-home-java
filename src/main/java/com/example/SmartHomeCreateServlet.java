@@ -65,7 +65,7 @@ public class SmartHomeCreateServlet extends HttpServlet {
         Map<String, String> headerMap = getHeaderMap(req);
         Map<String, Object> device = new Gson().fromJson(body, HashMap.class);
         database.addDevice((String) device.get("userId"), (Map<String, Object>) device.get("data"));
-        actionsApp.requestSync("1836.15267389");
+        actionsApp.requestSync(Constants.AGENT_USER_ID);
 
 
         res.setHeader("Access-Control-Allow-Origin", "*");
