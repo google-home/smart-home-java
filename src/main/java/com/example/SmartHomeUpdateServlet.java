@@ -35,9 +35,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -51,6 +53,10 @@ public class SmartHomeUpdateServlet extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(MySmartHomeApp.class);
     private static MyDataStore database = MyDataStore.getInstance();
     private final SmartHomeApp actionsApp = new MySmartHomeApp();
+    private static final List<String> UPDATE_DEVICE_PARAMS_KEYS = Arrays.asList(
+        new String[] {"name", "nickname", "localDeviceId", "errorCode", "tfa"}
+    );
+
 
     {
         try {
@@ -65,21 +71,25 @@ public class SmartHomeUpdateServlet extends HttpServlet {
     @Override protected void doPost(HttpServletRequest req, HttpServletResponse res)
             throws IOException {
         String body = req.getReader().lines().collect(Collectors.joining());
+        LOGGER.info("doPost, body = {}", body);
         JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
         String userId = bodyJson.get("userId").getAsString();
         String deviceId = bodyJson.get("deviceId").getAsString();
-        LOGGER.info("doPost, body = {}", body);
-        String deviceName = bodyJson.has("name") ? bodyJson.get("name").getAsString() : null;
-        String deviceNickname = bodyJson.has("nickname") ? bodyJson.get("nickname").getAsString()
-                : null;
         JsonObject deviceStatesJson = bodyJson.getAsJsonObject("states");
         Map<String, Object> deviceStates = deviceStatesJson != null ?
                                            new Gson().fromJson(deviceStatesJson, HashMap.class) :
                                            null;
-        String errorCode = bodyJson.has("errorCode") ? bodyJson.get("errorCode").getAsString() : null;
-        String tfa = bodyJson.has("tfa") ? bodyJson.get("tfa").getAsString() : null;
+        Map<String, String> deviceParams = new HashMap<>();
+        Set<String> deviceParamsKeys = bodyJson.keySet();
+        deviceParamsKeys.retainAll(UPDATE_DEVICE_PARAMS_KEYS);
+        for (String k : deviceParamsKeys) {
+          deviceParams.put(k, bodyJson.get(k).getAsString());
+        }
         try {
-            database.updateDevice(userId, deviceId, deviceName, deviceNickname, deviceStates, errorCode, tfa);
+            database.updateDevice(userId, deviceId, deviceStates, deviceParams);
+            if (deviceParams.containsKey("localDeviceId")) {
+                actionsApp.requestSync(Constants.AGENT_USER_ID);
+            }
             if (deviceStatesJson != null) {
               // Do state name replacement for ColorSetting trait
               // See https://developers.google.com/assistant/smarthome/traits/colorsetting#device-states
@@ -105,7 +115,7 @@ public class SmartHomeUpdateServlet extends HttpServlet {
               HomeGraphApiServiceProto.ReportStateAndNotificationRequest request =
                   HomeGraphApiServiceProto.ReportStateAndNotificationRequest.newBuilder()
                       .setRequestId(String.valueOf(Math.random()))
-                      .setAgentUserId("1836.15267389") // our single user's id
+                      .setAgentUserId(Constants.AGENT_USER_ID) // our single user's id
                       .setPayload(HomeGraphApiServiceProto.
                           StateAndNotificationPayload.newBuilder()
                           .setDevices(deviceBuilder)).build();
