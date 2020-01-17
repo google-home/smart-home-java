@@ -45,7 +45,7 @@ public class MySmartHomeApp extends SmartHomeApp {
         SyncResponse response = new SyncResponse();
         response.setRequestId(syncRequest.requestId);
         response.setPayload(new SyncResponse.Payload());
-        response.payload.agentUserId = Constants.AGENT_USER_ID;
+        response.payload.agentUserId = "1836.15267389";
 
         String userId = getUserId(headers);
         database.setHomegraph(userId, true);
@@ -92,9 +92,6 @@ public class MySmartHomeApp extends SmartHomeApp {
                 // https://github.com/actions-on-google/actions-on-google-java/issues/43 is fixed.
                 String customDataJson = new Gson().toJson(customData);
                 deviceBuilder.setCustomData(customDataJson);
-            }
-            if (device.contains("otherDeviceIds")) {
-                deviceBuilder.setOtherDeviceIds((List)device.get("otherDeviceIds"));
             }
             response.payload.devices[i] = deviceBuilder.build();
         }

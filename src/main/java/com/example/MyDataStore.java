@@ -22,7 +22,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.FieldValue;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.FirebaseApp;
@@ -31,7 +30,6 @@ import com.google.firebase.cloud.FirestoreClient;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -118,43 +116,26 @@ public class MyDataStore {
         user.update("homegraph", enable);
     }
 
-    public void updateDevice(String userId, String deviceId,
-                             Map<String, Object> states,
-                             Map<String, String> params) {
+    public void updateDevice(String userId, String deviceId, String deviceName,
+            String deviceNickname, Map<String, Object> states, String errorCode, String tfa) {
         DocumentReference device =
                 database.collection("users").document(userId)
                         .collection("devices")
                         .document(deviceId);
+        if (deviceName != null) {
+            device.update("name", deviceName);
+        }
+        if (deviceNickname != null) {
+            device.update("nickname", deviceNickname);
+        }
         if (states != null) {
             device.update("states", states);
         }
-        if (params.containsKey("deviceName")) {
-          String name = params.get("deviceName");
-          device.update("name", name != null ? name : FieldValue.delete());
+        if (errorCode != null) {
+            device.update("errorCode", errorCode);
         }
-        if (params.containsKey("deviceNickname")) {
-          String nickname = params.get("nickname");
-          device.update("nickname", nickname != null ? nickname : FieldValue.delete());
-        }
-        if (params.containsKey("errorCode")) {
-          String errorCode = params.get("errorCode");
-          device.update("errorCode", errorCode != null ? errorCode : FieldValue.delete());
-        }
-        if (params.containsKey("tfa")) {
-          String tfa = params.get("tfa");
-          device.update("tfa", tfa != null ? tfa : FieldValue.delete());
-        }
-        if (params.containsKey("localDeviceId")) {
-            String localDeviceId = params.get("localDeviceId");
-            if (localDeviceId != null) {
-                Map<String, Object> otherDeviceId = new HashMap<>();
-                otherDeviceId.put("deviceId", localDeviceId);
-                List<Object> otherDeviceIds = new ArrayList<>();
-                otherDeviceIds.add(otherDeviceId);
-                device.update("otherDeviceIds", otherDeviceIds);
-            } else {
-                device.update("otherDeviceIds", FieldValue.delete());
-            }
+        if (tfa != null) {
+            device.update("tfa", tfa);
         }
     }
 
