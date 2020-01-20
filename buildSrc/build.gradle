@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google LLC
+ * Copyright 2020 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,4 +14,27 @@
  * limitations under the License.
  */
 
-rootProject.name = 'myactions'
+plugins {
+  id 'java'
+  id 'java-gradle-plugin'
+}
+
+// TODO(proppy): workaround https://github.com/GoogleCloudPlatform/app-gradle-plugin/issues/371
+gradlePlugin {
+  plugins {
+    appenginePlugin {
+      id = 'com.google.cloud.tools.appengine'
+      implementationClass = 'com.google.cloud.tools.gradle.appengine.AppEnginePlugin'
+    }
+  }
+}
+
+repositories {
+  mavenCentral()
+  jcenter()
+}
+
+dependencies {
+  compileOnly gradleApi()
+  implementation 'com.google.cloud.tools:appengine-gradle-plugin:2.2.0'
+}

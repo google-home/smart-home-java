@@ -14,25 +14,6 @@
  * limitations under the License.
  */
 
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
-apply plugin: 'java'
-
-sourceCompatibility = 1.8
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    // AWS - https://mvnrepository.com/artifact/com.amazonaws/aws-lambda-java-core
-    implementation group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.0'
-}
-
 task buildAWSZip(type: Zip) {
     from compileJava
     from processResources
