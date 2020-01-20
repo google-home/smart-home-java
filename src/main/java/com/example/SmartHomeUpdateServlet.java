@@ -86,7 +86,7 @@ public class SmartHomeUpdateServlet extends HttpServlet {
     try {
       database.updateDevice(userId, deviceId, deviceStates, deviceParams);
       if (deviceParams.containsKey("localDeviceId")) {
-        actionsApp.requestSync(Constants.AGENT_USER_ID);
+        actionsApp.requestSync(userId);
       }
       if (deviceStatesJson != null) {
         // Do state name replacement for ColorSetting trait
@@ -115,7 +115,7 @@ public class SmartHomeUpdateServlet extends HttpServlet {
         HomeGraphApiServiceProto.ReportStateAndNotificationRequest request =
             HomeGraphApiServiceProto.ReportStateAndNotificationRequest.newBuilder()
                 .setRequestId(String.valueOf(Math.random()))
-                .setAgentUserId(Constants.AGENT_USER_ID) // our single user's id
+                .setAgentUserId(userId) // our single user's id
                 .setPayload(
                     HomeGraphApiServiceProto.StateAndNotificationPayload.newBuilder()
                         .setDevices(deviceBuilder))

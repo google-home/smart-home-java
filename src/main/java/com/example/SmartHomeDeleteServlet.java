@@ -65,9 +65,10 @@ public class SmartHomeDeleteServlet extends HttpServlet {
     LOGGER.info("doPost, body = {}", body);
     Map<String, String> headerMap = getHeaderMap(req);
     JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
-    database.deleteDevice(
-        bodyJson.get("userId").getAsString(), bodyJson.get("deviceId").getAsString());
-    actionsApp.requestSync(Constants.AGENT_USER_ID);
+    String userId = bodyJson.get("userId").getAsString();
+    String deviceId = bodyJson.get("deviceId").getAsString();
+    database.deleteDevice(userId, deviceId);
+    actionsApp.requestSync(userId);
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setContentType("text/plain");
     res.getWriter().println("OK");

@@ -65,8 +65,12 @@ public class SmartHomeCreateServlet extends HttpServlet {
     LOGGER.info("doPost, body = {}", body);
     Map<String, String> headerMap = getHeaderMap(req);
     Map<String, Object> device = new Gson().fromJson(body, HashMap.class);
-    database.addDevice((String) device.get("userId"), (Map<String, Object>) device.get("data"));
-    actionsApp.requestSync(Constants.AGENT_USER_ID);
+
+    String userId = (String) device.get("userId");
+    Map<String, Object> deviceData = (Map<String, Object>) device.get("data");
+    database.addDevice(userId, deviceData);
+
+    actionsApp.requestSync(userId);
 
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setContentType("text/plain");
@@ -74,10 +78,9 @@ public class SmartHomeCreateServlet extends HttpServlet {
   }
 
   @Override
-  protected void doGet(HttpServletRequest request, HttpServletResponse response)
-      throws IOException {
-    response.setContentType("text/plain");
-    response.getWriter().println("/smarthome/create is a POST call");
+  protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    res.setContentType("text/plain");
+    res.getWriter().println("/smarthome/create is a POST call");
   }
 
   @Override
