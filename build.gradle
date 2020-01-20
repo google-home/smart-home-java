@@ -17,6 +17,7 @@
 plugins {
   id 'java'
   id 'war'
+  id 'com.diffplug.gradle.spotless' version '3.27.1'
 }
 
 apply from: 'build-aws.gradle'
@@ -47,4 +48,12 @@ dependencies {
   implementation 'com.google.cloud:google-cloud-firestore:1.31.0'
   implementation 'com.google.auth:google-auth-library-oauth2-http:0.18.0'
   implementation 'com.google.api:api-common:1.8.1'
+}
+
+spotless {
+  java {
+    googleJavaFormat()
+    removeUnusedImports()
+    importOrder 'java', 'javax', 'org', 'com'
+  }
 }

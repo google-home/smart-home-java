@@ -16,18 +16,6 @@
 
 package com.example;
 
-
-import com.google.actions.api.smarthome.SmartHomeApp;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +24,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.actions.api.smarthome.SmartHomeApp;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 /**
  * Handles request received via HTTP POST and delegates it to your Actions app. See: [Request
  * handling in Google App
@@ -43,61 +44,58 @@ import java.util.stream.Collectors;
  */
 @WebServlet(name = "smarthomeDelete", urlPatterns = "/smarthome/delete")
 public class SmartHomeDeleteServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MySmartHomeApp.class);
-    private static MyDataStore database = MyDataStore.getInstance();
+  private static final Logger LOGGER = LoggerFactory.getLogger(MySmartHomeApp.class);
+  private static MyDataStore database = MyDataStore.getInstance();
 
-    private final SmartHomeApp actionsApp = new MySmartHomeApp();
+  private final SmartHomeApp actionsApp = new MySmartHomeApp();
 
-    {
-        try {
-            InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
-            GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
-            actionsApp.setCredentials(credentials);
-        } catch (Exception e) {
-            LOGGER.error("couldn't load credentials");
-        }
+  {
+    try {
+      InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
+      GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+      actionsApp.setCredentials(credentials);
+    } catch (Exception e) {
+      LOGGER.error("couldn't load credentials");
     }
+  }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        String body = req.getReader().lines().collect(Collectors.joining());
-        LOGGER.info("doPost, body = {}", body);
-        Map<String, String> headerMap = getHeaderMap(req);
-        JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
-        database.deleteDevice(bodyJson.get("userId").getAsString(),
-            bodyJson.get("deviceId").getAsString());
-        actionsApp.requestSync(Constants.AGENT_USER_ID);
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setContentType("text/plain");
-        res.getWriter().println("OK");
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    String body = req.getReader().lines().collect(Collectors.joining());
+    LOGGER.info("doPost, body = {}", body);
+    Map<String, String> headerMap = getHeaderMap(req);
+    JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
+    database.deleteDevice(
+        bodyJson.get("userId").getAsString(), bodyJson.get("deviceId").getAsString());
+    actionsApp.requestSync(Constants.AGENT_USER_ID);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setContentType("text/plain");
+    res.getWriter().println("OK");
+  }
 
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws IOException {
+    response.setContentType("text/plain");
+    response.getWriter().println("/smarthome/delete is a POST call");
+  }
+
+  @Override
+  protected void doOptions(HttpServletRequest req, HttpServletResponse res) {
+    // pre-flight request processing
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Accept,Origin");
+  }
+
+  private Map<String, String> getHeaderMap(HttpServletRequest req) {
+    Map<String, String> headerMap = new HashMap<>();
+    Enumeration headerNames = req.getHeaderNames();
+    while (headerNames.hasMoreElements()) {
+      String name = (String) headerNames.nextElement();
+      String val = req.getHeader(name);
+      headerMap.put(name, val);
     }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        response.setContentType("text/plain");
-        response.getWriter().println("/smarthome/delete is a POST call");
-    }
-
-    @Override
-    protected void doOptions(HttpServletRequest req, HttpServletResponse res) {
-        // pre-flight request processing
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers",
-                "X-Requested-With,Content-Type,Accept,Origin");
-
-    }
-
-    private Map<String, String> getHeaderMap(HttpServletRequest req) {
-        Map<String, String> headerMap = new HashMap<>();
-        Enumeration headerNames = req.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String name = (String) headerNames.nextElement();
-            String val = req.getHeader(name);
-            headerMap.put(name, val);
-        }
-        return headerMap;
-    }
+    return headerMap;
+  }
 }

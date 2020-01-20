@@ -16,15 +16,6 @@
 
 package com.example;
 
-import com.google.actions.api.smarthome.SmartHomeApp;
-import com.google.auth.oauth2.GoogleCredentials;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +25,17 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.actions.api.smarthome.SmartHomeApp;
+import com.google.auth.oauth2.GoogleCredentials;
+
 /**
  * Handles request received via HTTP POST and delegates it to your Actions app. See: [Request
  * handling in Google App
@@ -41,61 +43,61 @@ import java.util.stream.Collectors;
  */
 @WebServlet(name = "smarthome", urlPatterns = "/smarthome")
 public class SmartHomeServlet extends HttpServlet {
-    private static final Logger LOG = LoggerFactory.getLogger(MySmartHomeApp.class);
-    private final SmartHomeApp actionsApp = new MySmartHomeApp();
+  private static final Logger LOG = LoggerFactory.getLogger(MySmartHomeApp.class);
+  private final SmartHomeApp actionsApp = new MySmartHomeApp();
 
-    {
-        try {
-            InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
-            GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
-            actionsApp.setCredentials(credentials);
-        } catch (Exception e) {
-            LOG.error("couldn't load credentials");
-        }
+  {
+    try {
+      InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
+      GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+      actionsApp.setCredentials(credentials);
+    } catch (Exception e) {
+      LOG.error("couldn't load credentials");
     }
+  }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
-        String body = req.getReader().lines().collect(Collectors.joining());
-        LOG.info("doPost, body = {}", body);
-        Map<String, String> headerMap = getHeaderMap(req);
-        try {
-            String response = actionsApp.handleRequest(body, headerMap).get();
-            writeResponse(res, response);
-        } catch (ExecutionException | InterruptedException e) {
-            e.printStackTrace();
-        }
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    String body = req.getReader().lines().collect(Collectors.joining());
+    LOG.info("doPost, body = {}", body);
+    Map<String, String> headerMap = getHeaderMap(req);
+    try {
+      String response = actionsApp.handleRequest(body, headerMap).get();
+      writeResponse(res, response);
+    } catch (ExecutionException | InterruptedException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        response.setContentType("text/plain");
-        response
-                .getWriter()
-                .println(
-                        "ActionsServlet is listening but requires valid POST " +
-                                "request to respond with Action response.");
-    }
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws IOException {
+    response.setContentType("text/plain");
+    response
+        .getWriter()
+        .println(
+            "ActionsServlet is listening but requires valid POST "
+                + "request to respond with Action response.");
+  }
 
-    private void writeResponse(HttpServletResponse res, String asJson) {
-        try {
-            System.out.println("response = " + asJson);
-            res.getWriter().write(asJson);
-            res.getWriter().flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+  private void writeResponse(HttpServletResponse res, String asJson) {
+    try {
+      System.out.println("response = " + asJson);
+      res.getWriter().write(asJson);
+      res.getWriter().flush();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    private Map<String, String> getHeaderMap(HttpServletRequest req) {
-        Map<String, String> headerMap = new HashMap<>();
-        Enumeration headerNames = req.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String name = (String) headerNames.nextElement();
-            String val = req.getHeader(name);
-            headerMap.put(name, val);
-        }
-        return headerMap;
+  private Map<String, String> getHeaderMap(HttpServletRequest req) {
+    Map<String, String> headerMap = new HashMap<>();
+    Enumeration headerNames = req.getHeaderNames();
+    while (headerNames.hasMoreElements()) {
+      String name = (String) headerNames.nextElement();
+      String val = req.getHeader(name);
+      headerMap.put(name, val);
     }
+    return headerMap;
+  }
 }

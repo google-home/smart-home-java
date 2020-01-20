@@ -16,22 +16,6 @@
 
 package com.example;
 
-import com.google.actions.api.smarthome.SmartHomeApp;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.gson.Gson;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonObject;
-import com.google.home.graph.v1.HomeGraphApiServiceProto;
-import com.google.protobuf.Struct;
-import com.google.protobuf.Value;
-import com.google.protobuf.util.JsonFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,8 +24,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.actions.api.smarthome.SmartHomeApp;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.home.graph.v1.HomeGraphApiServiceProto;
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
+import com.google.protobuf.util.JsonFormat;
 
 /**
  * Handles request received via HTTP POST and delegates it to your Actions app. See: [Request
@@ -50,101 +51,100 @@ import java.util.stream.Collectors;
  */
 @WebServlet(name = "smarthomeUpdate", urlPatterns = "/smarthome/update")
 public class SmartHomeUpdateServlet extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MySmartHomeApp.class);
-    private static MyDataStore database = MyDataStore.getInstance();
-    private final SmartHomeApp actionsApp = new MySmartHomeApp();
-    private static final List<String> UPDATE_DEVICE_PARAMS_KEYS = Arrays.asList(
-        new String[] {"name", "nickname", "localDeviceId", "errorCode", "tfa"}
-    );
+  private static final Logger LOGGER = LoggerFactory.getLogger(MySmartHomeApp.class);
+  private static MyDataStore database = MyDataStore.getInstance();
+  private final SmartHomeApp actionsApp = new MySmartHomeApp();
+  private static final List<String> UPDATE_DEVICE_PARAMS_KEYS =
+      Arrays.asList(new String[] {"name", "nickname", "localDeviceId", "errorCode", "tfa"});
 
+  {
+    try {
+      InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
+      GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+      actionsApp.setCredentials(credentials);
+    } catch (Exception e) {
+      LOGGER.error("couldn't load credentials");
+    }
+  }
 
-    {
+  @Override
+  protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+    String body = req.getReader().lines().collect(Collectors.joining());
+    LOGGER.info("doPost, body = {}", body);
+    JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
+    String userId = bodyJson.get("userId").getAsString();
+    String deviceId = bodyJson.get("deviceId").getAsString();
+    JsonObject deviceStatesJson = bodyJson.getAsJsonObject("states");
+    Map<String, Object> deviceStates =
+        deviceStatesJson != null ? new Gson().fromJson(deviceStatesJson, HashMap.class) : null;
+    Map<String, String> deviceParams = new HashMap<>();
+    Set<String> deviceParamsKeys = bodyJson.keySet();
+    deviceParamsKeys.retainAll(UPDATE_DEVICE_PARAMS_KEYS);
+    for (String k : deviceParamsKeys) {
+      deviceParams.put(k, bodyJson.get(k).getAsString());
+    }
+    try {
+      database.updateDevice(userId, deviceId, deviceStates, deviceParams);
+      if (deviceParams.containsKey("localDeviceId")) {
+        actionsApp.requestSync(Constants.AGENT_USER_ID);
+      }
+      if (deviceStatesJson != null) {
+        // Do state name replacement for ColorSetting trait
+        // See https://developers.google.com/assistant/smarthome/traits/colorsetting#device-states
+        JsonObject colorJson = deviceStatesJson.getAsJsonObject("color");
+        if (colorJson != null && colorJson.has("spectrumRgb")) {
+          colorJson.add("spectrumRGB", colorJson.get("spectrumRgb"));
+          colorJson.remove("spectrumRgb");
+        }
+        Struct.Builder statesStruct = Struct.newBuilder();
         try {
-            InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
-            GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
-            actionsApp.setCredentials(credentials);
+          JsonFormat.parser()
+              .ignoringUnknownFields()
+              .merge(new Gson().toJson(deviceStatesJson), statesStruct);
         } catch (Exception e) {
-            LOGGER.error("couldn't load credentials");
+          LOGGER.error("FAILED TO BUILD");
         }
+
+        HomeGraphApiServiceProto.ReportStateAndNotificationDevice.Builder deviceBuilder =
+            HomeGraphApiServiceProto.ReportStateAndNotificationDevice.newBuilder()
+                .setStates(
+                    Struct.newBuilder()
+                        .putFields(
+                            deviceId, Value.newBuilder().setStructValue(statesStruct).build()));
+
+        HomeGraphApiServiceProto.ReportStateAndNotificationRequest request =
+            HomeGraphApiServiceProto.ReportStateAndNotificationRequest.newBuilder()
+                .setRequestId(String.valueOf(Math.random()))
+                .setAgentUserId(Constants.AGENT_USER_ID) // our single user's id
+                .setPayload(
+                    HomeGraphApiServiceProto.StateAndNotificationPayload.newBuilder()
+                        .setDevices(deviceBuilder))
+                .build();
+
+        actionsApp.reportState(request);
+      }
+    } catch (Exception e) {
+      LOGGER.error("failed to update device");
+      throw e;
+    } finally {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setContentType("text/plain");
+      res.getWriter().println("OK");
     }
+  }
 
-    @Override protected void doPost(HttpServletRequest req, HttpServletResponse res)
-            throws IOException {
-        String body = req.getReader().lines().collect(Collectors.joining());
-        LOGGER.info("doPost, body = {}", body);
-        JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
-        String userId = bodyJson.get("userId").getAsString();
-        String deviceId = bodyJson.get("deviceId").getAsString();
-        JsonObject deviceStatesJson = bodyJson.getAsJsonObject("states");
-        Map<String, Object> deviceStates = deviceStatesJson != null ?
-                                           new Gson().fromJson(deviceStatesJson, HashMap.class) :
-                                           null;
-        Map<String, String> deviceParams = new HashMap<>();
-        Set<String> deviceParamsKeys = bodyJson.keySet();
-        deviceParamsKeys.retainAll(UPDATE_DEVICE_PARAMS_KEYS);
-        for (String k : deviceParamsKeys) {
-          deviceParams.put(k, bodyJson.get(k).getAsString());
-        }
-        try {
-            database.updateDevice(userId, deviceId, deviceStates, deviceParams);
-            if (deviceParams.containsKey("localDeviceId")) {
-                actionsApp.requestSync(Constants.AGENT_USER_ID);
-            }
-            if (deviceStatesJson != null) {
-              // Do state name replacement for ColorSetting trait
-              // See https://developers.google.com/assistant/smarthome/traits/colorsetting#device-states
-              JsonObject colorJson = deviceStatesJson.getAsJsonObject("color");
-              if (colorJson != null &&
-                  colorJson.has("spectrumRgb")) {
-                colorJson.add("spectrumRGB", colorJson.get("spectrumRgb"));
-                colorJson.remove("spectrumRgb");
-              }
-              Struct.Builder statesStruct = Struct.newBuilder();
-              try {
-                JsonFormat.parser().ignoringUnknownFields()
-                    .merge(new Gson().toJson(deviceStatesJson), statesStruct);
-              } catch (Exception e) {
-                LOGGER.error("FAILED TO BUILD");
-              }
+  @Override
+  protected void doGet(HttpServletRequest request, HttpServletResponse response)
+      throws IOException {
+    response.setContentType("text/plain");
+    response.getWriter().println("/smarthome/update is a POST call");
+  }
 
-              HomeGraphApiServiceProto.ReportStateAndNotificationDevice.Builder deviceBuilder =
-                  HomeGraphApiServiceProto.ReportStateAndNotificationDevice.newBuilder()
-                      .setStates(Struct.newBuilder().putFields(deviceId,
-                                    Value.newBuilder().setStructValue(statesStruct).build()));
-
-              HomeGraphApiServiceProto.ReportStateAndNotificationRequest request =
-                  HomeGraphApiServiceProto.ReportStateAndNotificationRequest.newBuilder()
-                      .setRequestId(String.valueOf(Math.random()))
-                      .setAgentUserId(Constants.AGENT_USER_ID) // our single user's id
-                      .setPayload(HomeGraphApiServiceProto.
-                          StateAndNotificationPayload.newBuilder()
-                          .setDevices(deviceBuilder)).build();
-
-              actionsApp.reportState(request);
-            }
-        } catch (Exception e) {
-            LOGGER.error("failed to update device");
-            throw e;
-        } finally {
-            res.setHeader("Access-Control-Allow-Origin", "*");
-            res.setContentType("text/plain");
-            res.getWriter().println("OK");
-        }
-    }
-
-    @Override protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        response.setContentType("text/plain");
-        response.getWriter().println("/smarthome/update is a POST call");
-    }
-
-
-    @Override protected void doOptions(HttpServletRequest req, HttpServletResponse res) {
-        // pre-flight request processing
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers",
-                "X-Requested-With,Content-Type,Accept,Origin");
-
-    }
+  @Override
+  protected void doOptions(HttpServletRequest req, HttpServletResponse res) {
+    // pre-flight request processing
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Accept,Origin");
+  }
 }
