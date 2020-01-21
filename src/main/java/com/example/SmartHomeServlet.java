@@ -16,9 +16,7 @@
 
 package com.example;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,8 +47,8 @@ public class SmartHomeServlet extends HttpServlet {
 
   {
     try {
-      InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
-      GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+      GoogleCredentials credentials =
+          GoogleCredentials.fromStream(getClass().getResourceAsStream("smart-home-key.json"));
       actionsApp.setCredentials(credentials);
     } catch (Exception e) {
       LOG.error("couldn't load credentials");
@@ -65,6 +63,9 @@ public class SmartHomeServlet extends HttpServlet {
     Map<String, String> headerMap = getHeaderMap(req);
     try {
       String response = actionsApp.handleRequest(body, headerMap).get();
+      res.setStatus(HttpServletResponse.SC_OK);
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setContentType("application/json");
       writeResponse(res, response);
     } catch (ExecutionException | InterruptedException e) {
       LOG.error("failed to handle fulfillment request", e);

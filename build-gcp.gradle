@@ -18,5 +18,15 @@ apply plugin: 'com.google.cloud.tools.appengine'
 
 appengine {
   deploy {
+    projectId 'GCLOUD_CONFIG'
+    version 'GCLOUD_CONFIG'
   }
+}
+
+if (project.hasProperty('appengineProjectId')) {
+   appengine.deploy.projectId = project.appengineProjectId
+}
+
+if (project.hasProperty('appengineVersion')) {
+   appengine.deploy.version = project.appengineVersion
 }

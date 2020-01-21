@@ -16,9 +16,7 @@
 
 package com.example;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.stream.Collectors;
 
 import javax.servlet.annotation.WebServlet;
@@ -48,8 +46,8 @@ public class SmartHomeDeleteServlet extends HttpServlet {
 
   {
     try {
-      InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
-      GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+      GoogleCredentials credentials =
+          GoogleCredentials.fromStream(getClass().getResourceAsStream("smart-home-key.json"));
       actionsApp.setCredentials(credentials);
     } catch (Exception e) {
       LOGGER.error("couldn't load credentials");
@@ -63,8 +61,24 @@ public class SmartHomeDeleteServlet extends HttpServlet {
     JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
     String userId = bodyJson.get("userId").getAsString();
     String deviceId = bodyJson.get("deviceId").getAsString();
-    database.deleteDevice(userId, deviceId);
-    actionsApp.requestSync(userId);
+    try {
+      database.deleteDevice(userId, deviceId);
+    } catch (Exception e) {
+      LOGGER.error("adding device failed: {}", e);
+      res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setContentType("text/plain");
+      res.getWriter().println("ERROR");
+      return;
+    }
+
+    try {
+      actionsApp.requestSync(userId);
+    } catch (Exception e) {
+      LOGGER.error("request sync failed: {}", e);
+    }
+
+    res.setStatus(HttpServletResponse.SC_OK);
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setContentType("text/plain");
     res.getWriter().println("OK");

@@ -19,6 +19,7 @@ plugins {
   id 'war'
   id 'com.diffplug.gradle.spotless' version '3.27.1'
   id 'net.ltgt.errorprone' version '1.1.1'
+  id 'org.gretty' version '3.0.1'
 }
 
 apply from: 'build-aws.gradle'
@@ -50,8 +51,25 @@ dependencies {
   implementation 'com.google.auth:google-auth-library-oauth2-http:0.18.0'
   implementation 'com.google.api:api-common:1.8.1'
 
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
+  testImplementation 'io.rest-assured:rest-assured:4.2.0'
+  testImplementation 'org.hamcrest:hamcrest:2.2'
+
   errorprone 'com.google.errorprone:error_prone_core:2.3.4'
   errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
+}
+
+test {
+  if (project.hasProperty('restassuredBaseUri')) {
+     systemProperty 'restassuredBaseUri', project.restassuredBaseUri
+  }
+  useJUnitPlatform()
+}
+
+gretty {
+  integrationTestTask = 'test'
+  contextPath = '/'
 }
 
 spotless {

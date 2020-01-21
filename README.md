@@ -38,7 +38,7 @@ account credentials.
 2. Be sure you are currently inside your project (view dropdown on the top of the page)
 1. Select **Create Credentials** and create a **Service account key**
 1. Create the account and download a JSON file.
-   Save this as `src/main/webapp/WEB-INF/smart-home-key.json`.
+   Save this as `src/main/resources/smart-home-key.json`.
 
 
 #### Start testing
@@ -89,13 +89,10 @@ new SYNC command.
             homegraph: false
 ```
 
-1. Update the `DATABASE_URL` variable in [`MyDataStore`](src/main/java/com/example/MyDataStore.java)
- with your Firestore database.
-
 **Note**: If you are not using Google App Engine to host your server, but still want to
-integrate with Firestore, read [this guide](https://firebase.google.com/docs/admin/setup) on
-setting up the Firebase Admin SDK.
-
+integrate with Firestore:
+- Set `GOOGLE_CLOUD_PROJECT` environment variable to the name of the Firebase project.
+- read [this guide](https://firebase.google.com/docs/admin/setup) on setting up the Firebase Admin SDK.
 
 ### Webhook
 

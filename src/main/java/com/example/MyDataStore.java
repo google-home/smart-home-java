@@ -16,8 +16,6 @@
 
 package com.example;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,26 +41,19 @@ import com.google.firebase.cloud.FirestoreClient;
 
 public class MyDataStore {
 
-  private static final String DATABASE_URL = "";
   private static final Logger LOGGER = LoggerFactory.getLogger(MySmartHomeApp.class);
   private static MyDataStore ourInstance = new MyDataStore();
-  private static Firestore database;
+  Firestore database;
 
   public MyDataStore() {
     // Use a service account
     try {
-      InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
-
-      GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+      GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+      String projectId = System.getenv("GOOGLE_CLOUD_PROJECT");
       FirebaseOptions options =
-          new FirebaseOptions.Builder()
-              .setCredentials(credentials)
-              .setDatabaseUrl(DATABASE_URL)
-              .build();
+          new FirebaseOptions.Builder().setCredentials(credentials).setProjectId(projectId).build();
       FirebaseApp.initializeApp(options);
-
       database = FirestoreClient.getFirestore();
-
     } catch (Exception e) {
       LOGGER.error("ERROR: invalid service account credentials. See README.");
       LOGGER.error(e.getMessage());
@@ -113,27 +104,28 @@ public class MyDataStore {
   }
 
   public void updateDevice(
-      String userId, String deviceId, Map<String, Object> states, Map<String, String> params) {
+      String userId, String deviceId, Map<String, Object> states, Map<String, String> params)
+      throws ExecutionException, InterruptedException {
     DocumentReference device =
         database.collection("users").document(userId).collection("devices").document(deviceId);
     if (states != null) {
-      device.update("states", states);
+      device.update("states", states).get();
     }
     if (params.containsKey("name")) {
       String name = params.get("name");
-      device.update("name", name != null ? name : FieldValue.delete());
+      device.update("name", name != null ? name : FieldValue.delete()).get();
     }
     if (params.containsKey("nickname")) {
       String nickname = params.get("nickname");
-      device.update("nickname", nickname != null ? nickname : FieldValue.delete());
+      device.update("nickname", nickname != null ? nickname : FieldValue.delete()).get();
     }
     if (params.containsKey("errorCode")) {
       String errorCode = params.get("errorCode");
-      device.update("errorCode", errorCode != null ? errorCode : FieldValue.delete());
+      device.update("errorCode", errorCode != null ? errorCode : FieldValue.delete()).get();
     }
     if (params.containsKey("tfa")) {
       String tfa = params.get("tfa");
-      device.update("tfa", tfa != null ? tfa : FieldValue.delete());
+      device.update("tfa", tfa != null ? tfa : FieldValue.delete()).get();
     }
     if (params.containsKey("localDeviceId")) {
       String localDeviceId = params.get("localDeviceId");
@@ -142,25 +134,34 @@ public class MyDataStore {
         otherDeviceId.put("deviceId", localDeviceId);
         List<Object> otherDeviceIds = new ArrayList<>();
         otherDeviceIds.add(otherDeviceId);
-        device.update("otherDeviceIds", otherDeviceIds);
+        device.update("otherDeviceIds", otherDeviceIds).get();
       } else {
-        device.update("otherDeviceIds", FieldValue.delete());
+        device.update("otherDeviceIds", FieldValue.delete()).get();
       }
     }
   }
 
-  public void addDevice(String userId, Map<String, Object> data) {
+  public void addDevice(String userId, Map<String, Object> data)
+      throws ExecutionException, InterruptedException {
     String deviceId = (String) data.get("deviceId");
     database
         .collection("users")
         .document(userId)
         .collection("devices")
         .document(deviceId)
-        .set(data);
+        .set(data)
+        .get();
   }
 
-  public void deleteDevice(String userId, String deviceId) {
-    database.collection("users").document(userId).collection("devices").document(deviceId).delete();
+  public void deleteDevice(String userId, String deviceId)
+      throws ExecutionException, InterruptedException {
+    database
+        .collection("users")
+        .document(userId)
+        .collection("devices")
+        .document(deviceId)
+        .delete()
+        .get();
   }
 
   public Map<String, Object> getState(String userId, String deviceId)

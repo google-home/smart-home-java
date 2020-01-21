@@ -16,9 +16,7 @@
 
 package com.example;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -59,8 +57,8 @@ public class SmartHomeUpdateServlet extends HttpServlet {
 
   {
     try {
-      InputStream serviceAccount = new FileInputStream("WEB-INF/smart-home-key.json");
-      GoogleCredentials credentials = GoogleCredentials.fromStream(serviceAccount);
+      GoogleCredentials credentials =
+          GoogleCredentials.fromStream(getClass().getResourceAsStream("smart-home-key.json"));
       actionsApp.setCredentials(credentials);
     } catch (Exception e) {
       LOGGER.error("couldn't load credentials");
@@ -124,13 +122,18 @@ public class SmartHomeUpdateServlet extends HttpServlet {
         actionsApp.reportState(request);
       }
     } catch (Exception e) {
-      LOGGER.error("failed to update device");
-      throw e;
-    } finally {
+      LOGGER.error("failed to update device: {}", e);
+      res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.setContentType("text/plain");
-      res.getWriter().println("OK");
+      res.getWriter().println("ERROR");
+      return;
     }
+
+    res.setStatus(HttpServletResponse.SC_OK);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setContentType("text/plain");
+    res.getWriter().println("OK");
   }
 
   @Override
