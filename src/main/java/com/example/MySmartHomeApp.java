@@ -41,16 +41,26 @@ public class MySmartHomeApp extends SmartHomeApp {
   @Override
   public SyncResponse onSync(SyncRequest syncRequest, Map<?, ?> headers) {
 
-    SyncResponse response = new SyncResponse();
-    response.setRequestId(syncRequest.requestId);
-    response.setPayload(new SyncResponse.Payload());
-    response.payload.agentUserId = Constants.AGENT_USER_ID;
+    SyncResponse res = new SyncResponse();
+    res.setRequestId(syncRequest.requestId);
+    res.setPayload(new SyncResponse.Payload());
 
-    String userId = getUserId(headers);
+    String token = (String) headers.get("authorization");
+    String userId = "";
+    try {
+      userId = database.getUserId(token);
+    } catch (Exception e) {
+      // TODO(proppy): add errorCode when
+      // https://github.com/actions-on-google/actions-on-google-java/issues/44 is fixed.
+      LOGGER.error("failed to get user id for token: %d", token);
+      return res;
+    }
+    res.payload.agentUserId = userId;
+
     database.setHomegraph(userId, true);
     List<QueryDocumentSnapshot> devices = database.getDevices(userId);
     int numOfDevices = devices.size();
-    response.payload.devices = new SyncResponse.Payload.Device[numOfDevices];
+    res.payload.devices = new SyncResponse.Payload.Device[numOfDevices];
     for (int i = 0; i < numOfDevices; i++) {
       QueryDocumentSnapshot device = devices.get(i);
       SyncResponse.Payload.Device.Builder deviceBuilder =
@@ -96,10 +106,10 @@ public class MySmartHomeApp extends SmartHomeApp {
       if (device.contains("otherDeviceIds")) {
         deviceBuilder.setOtherDeviceIds((List) device.get("otherDeviceIds"));
       }
-      response.payload.devices[i] = deviceBuilder.build();
+      res.payload.devices[i] = deviceBuilder.build();
     }
 
-    return response;
+    return res;
   }
 
   @NotNull
@@ -107,12 +117,21 @@ public class MySmartHomeApp extends SmartHomeApp {
   public QueryResponse onQuery(QueryRequest queryRequest, Map<?, ?> headers) {
     QueryRequest.Inputs.Payload.Device[] devices =
         ((QueryRequest.Inputs) queryRequest.getInputs()[0]).payload.devices;
-    String userId = getUserId(headers);
-    Map<String, Map<String, Object>> deviceStates = new HashMap<>();
     QueryResponse res = new QueryResponse();
     res.setRequestId(queryRequest.requestId);
     res.setPayload(new QueryResponse.Payload());
 
+    String token = (String) headers.get("authorization");
+    String userId = "";
+    try {
+      userId = database.getUserId(token);
+    } catch (Exception e) {
+      LOGGER.error("failed to get user id for token: %d", headers.get("authorization"));
+      res.payload.setErrorCode("authFailure");
+      return res;
+    }
+
+    Map<String, Map<String, Object>> deviceStates = new HashMap<>();
     for (QueryRequest.Inputs.Payload.Device device : devices) {
       try {
         Map<String, Object> deviceState = database.getState(userId, device.id);
@@ -133,8 +152,19 @@ public class MySmartHomeApp extends SmartHomeApp {
   @NotNull
   @Override
   public ExecuteResponse onExecute(ExecuteRequest executeRequest, Map<?, ?> headers) {
-    String userId = getUserId(headers);
     ExecuteResponse res = new ExecuteResponse();
+
+    String token = (String) headers.get("authorization");
+    String userId = "";
+    try {
+      userId = database.getUserId(token);
+    } catch (Exception e) {
+      LOGGER.error("failed to get user id for token: %d", headers.get("authorization"));
+      res.setPayload(new ExecuteResponse.Payload());
+      res.payload.setErrorCode("authFailure");
+      return res;
+    }
+
     List<ExecuteResponse.Payload.Commands> commandsResponse = new ArrayList<>();
     List<String> successfulDevices = new ArrayList<>();
     Map<String, Object> states = new HashMap<>();
@@ -222,19 +252,12 @@ public class MySmartHomeApp extends SmartHomeApp {
   @NotNull
   @Override
   public void onDisconnect(DisconnectRequest disconnectRequest, Map<?, ?> headers) {
-    String userId = getUserId(headers);
-    database.setHomegraph(userId, false);
-  }
-
-  private String getUserId(Map<?, ?> headers) {
-    String userId = "";
+    String token = (String) headers.get("authorization");
     try {
-      userId = database.getUserId((String) headers.get("authorization"));
+      String userId = database.getUserId(token);
+      database.setHomegraph(userId, false);
     } catch (Exception e) {
-      LOGGER.error("USER NOT FOUND, check authorization header");
-      System.out.println(e.getMessage());
-      System.exit(1);
+      LOGGER.error("failed to get user id for token: %d", token);
     }
-    return userId;
   }
 }
