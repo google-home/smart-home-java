@@ -68,5 +68,8 @@ tasks.withType(JavaCompile).configureEach {
     disable('DoubleBraceInitialization')
     error('CatchAndPrintStackTrace')
     error('SystemExitOutsideMain')
+    error('ModifiedButNotUsed')
+    error('UnusedMethod')
+    error('UnusedVariable')
   }
 }

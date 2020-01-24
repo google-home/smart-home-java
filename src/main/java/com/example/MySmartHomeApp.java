@@ -179,9 +179,7 @@ public class MySmartHomeApp extends SmartHomeApp {
     ExecuteRequest.Inputs.Payload.Commands[] commands =
         ((ExecuteRequest.Inputs) executeRequest.inputs[0]).payload.commands;
     for (ExecuteRequest.Inputs.Payload.Commands command : commands) {
-      List<String> deviceIds = new ArrayList<>();
       for (ExecuteRequest.Inputs.Payload.Commands.Devices device : command.devices) {
-        deviceIds.add(device.id);
         try {
           states = database.execute(userId, device.id, command.execution[0]);
           successfulDevices.add(device.id);

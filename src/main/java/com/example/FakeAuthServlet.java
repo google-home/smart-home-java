@@ -18,7 +18,6 @@ package com.example;
 
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.util.stream.Collectors;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -45,7 +44,6 @@ public class FakeAuthServlet extends HttpServlet {
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
-    String body = req.getReader().lines().collect(Collectors.joining());
     res.setContentType("text/plain");
     res.getWriter().println("/fakeauth should be a GET");
   }

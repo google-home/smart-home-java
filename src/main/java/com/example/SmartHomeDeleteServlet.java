@@ -19,9 +19,6 @@ package com.example;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.annotation.WebServlet;
@@ -63,7 +60,6 @@ public class SmartHomeDeleteServlet extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
     String body = req.getReader().lines().collect(Collectors.joining());
     LOGGER.info("doPost, body = {}", body);
-    Map<String, String> headerMap = getHeaderMap(req);
     JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
     String userId = bodyJson.get("userId").getAsString();
     String deviceId = bodyJson.get("deviceId").getAsString();
@@ -87,16 +83,5 @@ public class SmartHomeDeleteServlet extends HttpServlet {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "X-Requested-With,Content-Type,Accept,Origin");
-  }
-
-  private Map<String, String> getHeaderMap(HttpServletRequest req) {
-    Map<String, String> headerMap = new HashMap<>();
-    Enumeration headerNames = req.getHeaderNames();
-    while (headerNames.hasMoreElements()) {
-      String name = (String) headerNames.nextElement();
-      String val = req.getHeader(name);
-      headerMap.put(name, val);
-    }
-    return headerMap;
   }
 }
