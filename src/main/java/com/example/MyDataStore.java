@@ -67,7 +67,7 @@ public class MyDataStore {
       LOGGER.error("ERROR: invalid service account credentials. See README.");
       LOGGER.error(e.getMessage());
 
-      System.exit(1);
+      throw new RuntimeException(e);
     }
   }
 

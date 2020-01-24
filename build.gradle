@@ -67,5 +67,6 @@ tasks.withType(JavaCompile).configureEach {
     // TODO(proppy): Fix requires JDK 9+.
     disable('DoubleBraceInitialization')
     error('CatchAndPrintStackTrace')
+    error('SystemExitOutsideMain')
   }
 }
