@@ -75,17 +75,11 @@ public class MyDataStore {
     return ourInstance;
   }
 
-  public List<QueryDocumentSnapshot> getDevices(String userId) {
-    List<QueryDocumentSnapshot> devices = new ArrayList<>();
-    try {
-      ApiFuture<QuerySnapshot> deviceQuery =
-          database.collection("users").document(userId).collection("devices").get();
-      QuerySnapshot querySnapshot = deviceQuery.get();
-      devices = querySnapshot.getDocuments();
-    } catch (ExecutionException | InterruptedException e) {
-      e.printStackTrace();
-    }
-    return devices;
+  public List<QueryDocumentSnapshot> getDevices(String userId)
+      throws ExecutionException, InterruptedException {
+    ApiFuture<QuerySnapshot> deviceQuery =
+        database.collection("users").document(userId).collection("devices").get();
+    return deviceQuery.get().getDocuments();
   }
 
   public String getUserId(String token) throws ExecutionException, InterruptedException {

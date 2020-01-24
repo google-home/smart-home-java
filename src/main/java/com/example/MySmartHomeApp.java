@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -58,7 +59,13 @@ public class MySmartHomeApp extends SmartHomeApp {
     res.payload.agentUserId = userId;
 
     database.setHomegraph(userId, true);
-    List<QueryDocumentSnapshot> devices = database.getDevices(userId);
+    List<QueryDocumentSnapshot> devices = new ArrayList<>();
+    try {
+      devices = database.getDevices(userId);
+    } catch (ExecutionException | InterruptedException e) {
+      LOGGER.error("failed to get devices", e);
+      return res;
+    }
     int numOfDevices = devices.size();
     res.payload.devices = new SyncResponse.Payload.Device[numOfDevices];
     for (int i = 0; i < numOfDevices; i++) {

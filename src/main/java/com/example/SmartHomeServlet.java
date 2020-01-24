@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -57,7 +58,8 @@ public class SmartHomeServlet extends HttpServlet {
   }
 
   @Override
-  protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {
+  protected void doPost(HttpServletRequest req, HttpServletResponse res)
+      throws IOException, ServletException {
     String body = req.getReader().lines().collect(Collectors.joining());
     LOG.info("doPost, body = {}", body);
     Map<String, String> headerMap = getHeaderMap(req);
@@ -65,7 +67,8 @@ public class SmartHomeServlet extends HttpServlet {
       String response = actionsApp.handleRequest(body, headerMap).get();
       writeResponse(res, response);
     } catch (ExecutionException | InterruptedException e) {
-      e.printStackTrace();
+      LOG.error("failed to handle fulfillment request", e);
+      throw new ServletException(e);
     }
   }
 
@@ -80,14 +83,10 @@ public class SmartHomeServlet extends HttpServlet {
                 + "request to respond with Action response.");
   }
 
-  private void writeResponse(HttpServletResponse res, String asJson) {
-    try {
-      System.out.println("response = " + asJson);
-      res.getWriter().write(asJson);
-      res.getWriter().flush();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+  private void writeResponse(HttpServletResponse res, String asJson) throws IOException {
+    System.out.println("response = " + asJson);
+    res.getWriter().write(asJson);
+    res.getWriter().flush();
   }
 
   private Map<String, String> getHeaderMap(HttpServletRequest req) {
