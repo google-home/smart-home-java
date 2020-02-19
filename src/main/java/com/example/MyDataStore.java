@@ -422,6 +422,17 @@ public class MyDataStore {
         states.put("isDocked", true);
         break;
 
+        // action.devices.traits.EnergyStorage
+      case "action.devices.commands.Charge":
+        database
+            .collection("users")
+            .document(userId)
+            .collection("devices")
+            .document(deviceId)
+            .update("states.isCharging", execution.getParams().get("charge"));
+        states.put("isCharging", execution.getParams().get("charge"));
+        break;
+
         // action.devices.traits.FanSpeed
       case "action.devices.commands.SetFanSpeed":
         database
