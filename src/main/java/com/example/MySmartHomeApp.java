@@ -144,6 +144,7 @@ public class MySmartHomeApp extends SmartHomeApp {
         Map<String, Object> deviceState = database.getState(userId, device.id);
         deviceState.put("status", "SUCCESS");
         deviceStates.put(device.id, deviceState);
+        ReportState.makeRequest(this, userId, device.id, deviceState);
       } catch (Exception e) {
         LOGGER.error("QUERY FAILED: {}", e);
         Map<String, Object> failedDevice = new HashMap<>();
@@ -183,6 +184,7 @@ public class MySmartHomeApp extends SmartHomeApp {
         try {
           states = database.execute(userId, device.id, command.execution[0]);
           successfulDevices.add(device.id);
+          ReportState.makeRequest(this, userId, device.id, states);
         } catch (Exception e) {
           if (e.getMessage().equals("pinNeeded")) {
             ExecuteResponse.Payload.Commands failedDevice = new ExecuteResponse.Payload.Commands();
