@@ -30,15 +30,15 @@ public class FakeAuthServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
-    String newUrl =
-        res.encodeRedirectURL(
-            String.format(
-                "%s?code=%s&state=%s",
-                URLDecoder.decode(req.getParameter("redirect_uri"), "UTF8"),
-                "xxxxxx",
-                req.getParameter("state")));
+    String redirectURL =
+        String.format(
+            "%s?code=%s&state=%s",
+            URLDecoder.decode(req.getParameter("redirect_uri"), "UTF8"),
+            "xxxxxx",
+            req.getParameter("state"));
+    String loginUrl = res.encodeRedirectURL("/login?responseurl=" + redirectURL);
     res.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
-    res.setHeader("Location", newUrl);
+    res.setHeader("Location", loginUrl);
     res.getWriter().flush();
   }
 
