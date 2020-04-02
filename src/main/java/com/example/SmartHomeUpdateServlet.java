@@ -37,10 +37,6 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.home.graph.v1.HomeGraphApiServiceProto;
-import com.google.protobuf.Struct;
-import com.google.protobuf.Value;
-import com.google.protobuf.util.JsonFormat;
 
 /**
  * Handles request received via HTTP POST and delegates it to your Actions app. See: [Request
@@ -72,9 +68,9 @@ public class SmartHomeUpdateServlet extends HttpServlet {
     JsonObject bodyJson = new JsonParser().parse(body).getAsJsonObject();
     String userId = bodyJson.get("userId").getAsString();
     String deviceId = bodyJson.get("deviceId").getAsString();
-    JsonObject deviceStatesJson = bodyJson.getAsJsonObject("states");
+    JsonObject states = bodyJson.getAsJsonObject("states");
     Map<String, Object> deviceStates =
-        deviceStatesJson != null ? new Gson().fromJson(deviceStatesJson, HashMap.class) : null;
+        states != null ? new Gson().fromJson(states, HashMap.class) : null;
     Map<String, String> deviceParams = new HashMap<>();
     Set<String> deviceParamsKeys = bodyJson.keySet();
     deviceParamsKeys.retainAll(UPDATE_DEVICE_PARAMS_KEYS);
@@ -86,40 +82,8 @@ public class SmartHomeUpdateServlet extends HttpServlet {
       if (deviceParams.containsKey("localDeviceId")) {
         actionsApp.requestSync(userId);
       }
-      if (deviceStatesJson != null) {
-        // Do state name replacement for ColorSetting trait
-        // See https://developers.google.com/assistant/smarthome/traits/colorsetting#device-states
-        JsonObject colorJson = deviceStatesJson.getAsJsonObject("color");
-        if (colorJson != null && colorJson.has("spectrumRgb")) {
-          colorJson.add("spectrumRGB", colorJson.get("spectrumRgb"));
-          colorJson.remove("spectrumRgb");
-        }
-        Struct.Builder statesStruct = Struct.newBuilder();
-        try {
-          JsonFormat.parser()
-              .ignoringUnknownFields()
-              .merge(new Gson().toJson(deviceStatesJson), statesStruct);
-        } catch (Exception e) {
-          LOGGER.error("FAILED TO BUILD");
-        }
-
-        HomeGraphApiServiceProto.ReportStateAndNotificationDevice.Builder deviceBuilder =
-            HomeGraphApiServiceProto.ReportStateAndNotificationDevice.newBuilder()
-                .setStates(
-                    Struct.newBuilder()
-                        .putFields(
-                            deviceId, Value.newBuilder().setStructValue(statesStruct).build()));
-
-        HomeGraphApiServiceProto.ReportStateAndNotificationRequest request =
-            HomeGraphApiServiceProto.ReportStateAndNotificationRequest.newBuilder()
-                .setRequestId(String.valueOf(Math.random()))
-                .setAgentUserId(userId) // our single user's id
-                .setPayload(
-                    HomeGraphApiServiceProto.StateAndNotificationPayload.newBuilder()
-                        .setDevices(deviceBuilder))
-                .build();
-
-        actionsApp.reportState(request);
+      if (states != null) {
+        ReportState.makeRequest(actionsApp, userId, deviceId, states);
       }
     } catch (Exception e) {
       LOGGER.error("failed to update device: {}", e);
