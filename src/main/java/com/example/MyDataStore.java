@@ -215,6 +215,40 @@ public class MyDataStore {
     }
 
     switch (execution.command) {
+        // action.devices.traits.AppSelector
+      case "action.devices.commands.appSelect":
+        {
+          String newApplication = (String) execution.getParams().get("newApplication");
+          String newApplicationName = (String) execution.getParams().get("newApplicationName");
+          String currentApplication = newApplication != null ? newApplication : newApplicationName;
+          database
+              .collection("users")
+              .document(userId)
+              .collection("devices")
+              .document(deviceId)
+              .update("states.currentApplication", currentApplication);
+          states.put("currentApplication", currentApplication);
+          break;
+        }
+
+      case "action.devices.commands.appInstall":
+        {
+          String newApplication = (String) execution.getParams().get("newApplication");
+          String newApplicationName = (String) execution.getParams().get("newApplicationName");
+          String currentApplication = newApplication != null ? newApplication : newApplicationName;
+          LOGGER.info("Install app " + currentApplication);
+          break;
+        }
+
+      case "action.devices.commands.appSearch":
+        {
+          String newApplication = (String) execution.getParams().get("newApplication");
+          String newApplicationName = (String) execution.getParams().get("newApplicationName");
+          String currentApplication = newApplication != null ? newApplication : newApplicationName;
+          LOGGER.info("Search for app " + currentApplication);
+          break;
+        }
+
         // action.devices.traits.ArmDisarm
       case "action.devices.commands.ArmDisarm":
         if (execution.getParams().containsKey("arm")) {
@@ -489,6 +523,72 @@ public class MyDataStore {
                 execution.getParams().get("humiditySetpointPercent"));
         states.put("humiditySetpointPercent", execution.getParams().get("humiditySetpointPercent"));
         break;
+
+        // action.devices.traits.InputSelector
+      case "action.devices.commands.SetInput":
+        {
+          String newInput = (String) execution.getParams().get("newInput");
+          database
+              .collection("users")
+              .document(userId)
+              .collection("devices")
+              .document(deviceId)
+              .update("states.currentInput", newInput);
+          states.put("currentInput", newInput);
+          break;
+        }
+
+      case "action.devices.commands.PreviousInput":
+        {
+          Map<String, Object> attributes = (Map<String, Object>) device.getData().get("attributes");
+          String currentInput = (String) deviceStates.get("currentInput");
+          Map<String, Object>[] availableInputs =
+              (Map<String, Object>[]) attributes.get("availableInputs");
+          int index = -1;
+          for (int i = 0; i < availableInputs.length; i++) {
+            String input = (String) availableInputs[i].get("key");
+            if (currentInput.equals(input)) {
+              index = i;
+            }
+          }
+          int previousInputIndex = Math.min(index - 1, 0);
+          String newInput = (String) availableInputs[previousInputIndex].get("key");
+
+          database
+              .collection("users")
+              .document(userId)
+              .collection("devices")
+              .document(deviceId)
+              .update("states.currentInput", newInput);
+          states.put("currentInput", newInput);
+          break;
+        }
+
+      case "action.devices.commands.NextInput":
+        {
+          Map<String, Object> attributes = (Map<String, Object>) device.getData().get("attributes");
+          String currentInput = (String) deviceStates.get("currentInput");
+          Map<String, Object>[] availableInputs =
+              (Map<String, Object>[]) attributes.get("availableInputs");
+          int index = -1;
+          for (int i = 0; i < availableInputs.length; i++) {
+            String input = (String) availableInputs[i].get("key");
+            if (currentInput.equals(input)) {
+              index = i;
+            }
+          }
+          int nextInputIndex = Math.min(index + 1, availableInputs.length - 1);
+          String newInput = (String) availableInputs[nextInputIndex].get("key");
+
+          database
+              .collection("users")
+              .document(userId)
+              .collection("devices")
+              .document(deviceId)
+              .update("states.currentInput", newInput);
+          states.put("currentInput", newInput);
+          break;
+        }
 
         // action.devices.traits.Locator
       case "action.devices.commands.Locate":
@@ -815,6 +915,112 @@ public class MyDataStore {
         states.put(
             "thermostatTemperatureAmbient", deviceStates.get("thermostatTemperatureAmbient"));
         states.put("thermostatHumidityAmbient", deviceStates.get("thermostatHumidityAmbient"));
+        break;
+
+        // action.devices.traits.TransportControl
+        // Traits are considered no-ops as they have no state
+      case "action.devices.commands.mediaPrevious":
+        LOGGER.info("Play the previous media");
+        break;
+
+      case "action.devices.commands.mediaNext":
+        LOGGER.info("Play the next media");
+        break;
+
+      case "action.devices.commands.mediaRepeatMode":
+        Boolean isOn = (Boolean) execution.getParams().get("isOn");
+        Boolean isSingle = (Boolean) execution.getParams().get("isSingle");
+        LOGGER.info("Repeat mode enabled: " + isOn + ". Single item enabled: " + isSingle);
+        break;
+
+      case "action.devices.commands.mediaShuffle":
+        LOGGER.info("Shuffle the playlist of media");
+        break;
+
+      case "action.devices.commands.mediaClosedCaptioningOn":
+        String ccLanguage = (String) execution.getParams().get("closedCaptioningLanguage");
+        String uqLanguage = (String) execution.getParams().get("userQueryLanguage");
+        LOGGER.info("Closed captioning enabled for " + ccLanguage + " for user in " + uqLanguage);
+        break;
+
+      case "action.devices.commands.mediaClosedCaptioningOff":
+        LOGGER.info("Closed captioning disabled");
+        break;
+
+      case "action.devices.commands.mediaPause":
+        database
+            .collection("users")
+            .document(userId)
+            .collection("devices")
+            .document(deviceId)
+            .update("states.playbackState", "PAUSED");
+        states.put("playbackState", "PAUSED");
+        break;
+
+      case "action.devices.commands.mediaResume":
+        database
+            .collection("users")
+            .document(userId)
+            .collection("devices")
+            .document(deviceId)
+            .update("states.playbackState", "PLAYING");
+        states.put("playbackState", "PLAYING");
+        break;
+
+      case "action.devices.commands.mediaStop":
+        database
+            .collection("users")
+            .document(userId)
+            .collection("devices")
+            .document(deviceId)
+            .update("states.playbackState", "STOPPED");
+        states.put("playbackState", "STOPPED");
+        break;
+
+      case "action.devices.commands.mediaSeekRelative":
+        int relativePositionMs = (int) execution.getParams().get("relativePositionMs");
+        LOGGER.info("Seek to (now + " + relativePositionMs + ") ms");
+        break;
+
+      case "action.devices.commands.mediaSeekToPosition":
+        int absPositionMs = (int) execution.getParams().get("absPositionMs");
+        LOGGER.info("Seek to " + absPositionMs + " ms");
+        break;
+
+        // action.devices.traits.Volume
+      case "action.devices.commands.setVolume":
+        int volumeLevel = (int) execution.getParams().get("volumeLevel");
+        database
+            .collection("users")
+            .document(userId)
+            .collection("devices")
+            .document(deviceId)
+            .update("states.currentVolume", volumeLevel);
+        states.put("currentVolume", volumeLevel);
+        break;
+
+      case "action.devices.commands.volumeRelative":
+        int relativeSteps = (int) execution.getParams().get("relativeSteps");
+        int currentVolume = (int) deviceStates.get("currentVolume");
+        int newVolume = currentVolume + relativeSteps;
+        database
+            .collection("users")
+            .document(userId)
+            .collection("devices")
+            .document(deviceId)
+            .update("states.currentVolume", newVolume);
+        states.put("currentVolume", newVolume);
+        break;
+
+      case "action.devices.commands.mute":
+        boolean mute = (boolean) execution.getParams().get("mute");
+        database
+            .collection("users")
+            .document(userId)
+            .collection("devices")
+            .document(deviceId)
+            .update("states.isMuted", mute);
+        states.put("isMuted", mute);
         break;
     }
 
