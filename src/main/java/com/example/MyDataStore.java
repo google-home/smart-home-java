@@ -616,6 +616,73 @@ public class MyDataStore {
         states.put("isLocked", execution.getParams().get("lock"));
         break;
 
+        // action.devices.traits.NetworkControl
+      case "action.devices.commands.EnableDisableGuestNetwork":
+        {
+          database
+              .collection("users")
+              .document(userId)
+              .collection("devices")
+              .document(deviceId)
+              .update("states.guestNetworkEnabled", execution.getParams().get("enable"));
+          states.put("guestNetworkEnabled", execution.getParams().get("enable"));
+          break;
+        }
+
+      case "action.devices.commands.EnableDisableNetworkProfile":
+        {
+          List<String> profiles =
+              (List<String>)
+                  ((Map<String, Object>) device.getData().get("attributes")).get("networkProfiles");
+          boolean profileExists =
+              profiles.stream()
+                  .anyMatch(
+                      (String profile) -> profile.equals(execution.getParams().get("profile")));
+          if (!profileExists) {
+            throw new RuntimeException("networkProfileNotRecognized");
+          }
+          // No state change occurs
+          break;
+        }
+
+      case "action.devices.commands.TestNetworkSpeed":
+        {
+          boolean testDownloadSpeed = (boolean) execution.getParams().get("testDownloadSpeed");
+          boolean testUploadSpeed = (boolean) execution.getParams().get("testUploadSpeed");
+          Map<String, Object> lastNetworkDownloadSpeedTest =
+              (Map<String, Object>)
+                  ((Map<String, Object>) device.getData().get("states"))
+                      .get("lastNetworkDownloadSpeedTest");
+          Map<String, Object> lastNetworkUploadSpeedTest =
+              (Map<String, Object>)
+                  ((Map<String, Object>) device.getData().get("states"))
+                      .get("lastNetworkUploadSpeedTest");
+          int unixTimestampSec = Math.toIntExact(new Date().getTime() / 1000);
+          if (testDownloadSpeed) {
+            lastNetworkDownloadSpeedTest.put("downloadSpeedMbps", (Math.random() * 100));
+            lastNetworkDownloadSpeedTest.put("unixTimestampSec", unixTimestampSec);
+          }
+          if (testUploadSpeed) {
+            lastNetworkUploadSpeedTest.put("uploadSpeedMbps", (Math.random() * 100));
+            lastNetworkUploadSpeedTest.put("unixTimestampSec", unixTimestampSec);
+          }
+
+          database
+              .collection("users")
+              .document(userId)
+              .collection("devices")
+              .document(deviceId)
+              .update(
+                  "states.lastNetworkDownloadSpeedTest", lastNetworkDownloadSpeedTest,
+                  "states.lastNetworkUploadSpeedTest", lastNetworkUploadSpeedTest);
+          throw new RuntimeException("PENDING");
+        }
+
+      case "action.devices.commands.GetGuestNetworkPassword":
+        {
+          states.put("guestNetworkPassword", "wifi-password-123");
+        }
+
         // action.devices.traits.OnOff
       case "action.devices.commands.OnOff":
         database

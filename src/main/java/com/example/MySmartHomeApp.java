@@ -186,6 +186,13 @@ public class MySmartHomeApp extends SmartHomeApp {
           successfulDevices.add(device.id);
           ReportState.makeRequest(this, userId, device.id, states);
         } catch (Exception e) {
+          if (e.getMessage().equals("PENDING")) {
+            ExecuteResponse.Payload.Commands pendingDevice = new ExecuteResponse.Payload.Commands();
+            pendingDevice.ids = new String[] {device.id};
+            pendingDevice.status = "PENDING";
+            commandsResponse.add(pendingDevice);
+            continue;
+          }
           if (e.getMessage().equals("pinNeeded")) {
             ExecuteResponse.Payload.Commands failedDevice = new ExecuteResponse.Payload.Commands();
             failedDevice.ids = new String[] {device.id};
