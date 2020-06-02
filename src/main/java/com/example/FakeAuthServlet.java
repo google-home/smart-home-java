@@ -19,6 +19,9 @@ package com.example;
 import java.io.IOException;
 import java.net.URLDecoder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -27,17 +30,23 @@ import javax.servlet.http.HttpServletResponse;
 // With @WebServlet annotation the webapp/WEB-INF/web.xml is no longer required.
 @WebServlet(name = "auth", description = "Requests: Trivial request", urlPatterns = "/fakeauth")
 public class FakeAuthServlet extends HttpServlet {
+  private static final Logger LOGGER = LoggerFactory.getLogger(MySmartHomeApp.class);
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
     String redirectURL =
         String.format(
-            "%s?code=%s&state=%s",
+            "%s?state=%s&code=%s",
             URLDecoder.decode(req.getParameter("redirect_uri"), "UTF8"),
-            "xxxxxx",
-            req.getParameter("state"));
+            req.getParameter("state"),
+            "xxxxxx");
+
+    //LOGGER.error("====== redirectURL : " + redirectURL);
+
     String loginUrl = res.encodeRedirectURL("/login?responseurl=" + redirectURL);
     res.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
+    LOGGER.error("====== loginUrl : " + loginUrl);
+
     res.setHeader("Location", loginUrl);
     res.getWriter().flush();
   }
