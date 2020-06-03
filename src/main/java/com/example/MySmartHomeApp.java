@@ -71,11 +71,8 @@ public class MySmartHomeApp extends SmartHomeApp {
     res.payload.devices = new SyncResponse.Payload.Device[numOfDevices];
     for (int i = 0; i < numOfDevices; i++) {
       QueryDocumentSnapshot device = devices.get(i);
-      System.out.println("Device received : " + device.getData().toString());
-      System.out.println("Device id : " + device.getId());
       HashMap name = new HashMap();
       name = (HashMap)device.get("name");
-      System.out.println("Device name 2: "+ name.get("name"));
       HashMap deviceInfo = new HashMap();
       deviceInfo = (HashMap)device.get("deviceInfo");
 
@@ -192,7 +189,6 @@ public class MySmartHomeApp extends SmartHomeApp {
       for (ExecuteRequest.Inputs.Payload.Commands.Devices device : command.devices) {
         try {
           states = database.execute(userId, device.id, command.execution[0]);
-          System.out.println( command.execution[0] );
           successfulDevices.add(device.id);
           ReportState.makeRequest(this, userId, device.id, states);
         } catch (Exception e) {
