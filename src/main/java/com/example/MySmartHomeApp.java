@@ -67,7 +67,6 @@ public class MySmartHomeApp extends SmartHomeApp {
       return res;
     }
     int numOfDevices = devices.size();
-    System.out.println("Number of devices : " + numOfDevices);
     res.payload.devices = new SyncResponse.Payload.Device[numOfDevices];
     for (int i = 0; i < numOfDevices; i++) {
       QueryDocumentSnapshot device = devices.get(i);
