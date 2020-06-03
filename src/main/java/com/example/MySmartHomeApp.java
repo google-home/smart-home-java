@@ -67,9 +67,18 @@ public class MySmartHomeApp extends SmartHomeApp {
       return res;
     }
     int numOfDevices = devices.size();
+    System.out.println("Number of devices : " + numOfDevices);
     res.payload.devices = new SyncResponse.Payload.Device[numOfDevices];
     for (int i = 0; i < numOfDevices; i++) {
       QueryDocumentSnapshot device = devices.get(i);
+      System.out.println("Device received : " + device.getData().toString());
+      System.out.println("Device id : " + device.getId());
+      HashMap name = new HashMap();
+      name = (HashMap)device.get("name");
+      System.out.println("Device name 2: "+ name.get("name"));
+      HashMap deviceInfo = new HashMap();
+      deviceInfo = (HashMap)device.get("deviceInfo");
+
       SyncResponse.Payload.Device.Builder deviceBuilder =
           new SyncResponse.Payload.Device.Builder()
               .setId(device.getId())
@@ -77,18 +86,18 @@ public class MySmartHomeApp extends SmartHomeApp {
               .setTraits((List<String>) device.get("traits"))
               .setName(
                   DeviceProto.DeviceNames.newBuilder()
-                      .addAllDefaultNames((List<String>) device.get("defaultNames"))
-                      .setName((String) device.get("name"))
-                      .addAllNicknames((List<String>) device.get("nicknames"))
+                      .addAllDefaultNames((List<String>) name.get("defaultNames"))
+                      .setName((String) name.get("name"))
+                      .addAllNicknames((List<String>) name.get("nicknames"))
                       .build())
               .setWillReportState((Boolean) device.get("willReportState"))
-              .setRoomHint((String) device.get("roomHint"))
+              //.setRoomHint((String) device.get("roomHint"))
               .setDeviceInfo(
                   DeviceProto.DeviceInfo.newBuilder()
-                      .setManufacturer((String) device.get("manufacturer"))
-                      .setModel((String) device.get("model"))
-                      .setHwVersion((String) device.get("hwVersion"))
-                      .setSwVersion((String) device.get("swVersion"))
+                      .setManufacturer((String) deviceInfo.get("manufacturer"))
+                      .setModel((String) deviceInfo.get("model"))
+                      .setHwVersion((String) deviceInfo.get("hwVersion"))
+                      .setSwVersion((String) deviceInfo.get("swVersion"))
                       .build());
       if (device.contains("attributes")) {
         Map<String, Object> attributes = new HashMap<>();
@@ -183,6 +192,7 @@ public class MySmartHomeApp extends SmartHomeApp {
       for (ExecuteRequest.Inputs.Payload.Commands.Devices device : command.devices) {
         try {
           states = database.execute(userId, device.id, command.execution[0]);
+          System.out.println( command.execution[0] );
           successfulDevices.add(device.id);
           ReportState.makeRequest(this, userId, device.id, states);
         } catch (Exception e) {
