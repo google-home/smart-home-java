@@ -199,18 +199,20 @@ public class MyDataStore {
       throw new Exception("deviceOffline");
     }
 
-    if (!device.getString("errorCode").isEmpty()) {
+    if (device.contains("errorCode") && !device.getString("errorCode").isEmpty()) {
       throw new Exception(device.getString("errorCode"));
     }
 
-    if (device.getString("tfa").equals("ack") && execution.getChallenge() == null) {
-      throw new Exception("ackNeeded");
-    } else if (!device.getString("tfa").isEmpty() && execution.getChallenge() == null) {
-      throw new Exception("pinNeeded");
-    } else if (!device.getString("tfa").isEmpty() && execution.getChallenge() != null) {
-      String pin = (String) execution.getChallenge().get("pin");
-      if (pin != null && !pin.equals(device.getString("tfa"))) {
-        throw new Exception("challengeFailedPinNeeded");
+    if (device.contains("tfa")) {
+      if (device.getString("tfa").equals("ack") && execution.getChallenge() == null) {
+        throw new Exception("ackNeeded");
+      } else if (!device.getString("tfa").isEmpty() && execution.getChallenge() == null) {
+        throw new Exception("pinNeeded");
+      } else if (!device.getString("tfa").isEmpty() && execution.getChallenge() != null) {
+        String pin = (String) execution.getChallenge().get("pin");
+        if (pin != null && !pin.equals(device.getString("tfa"))) {
+          throw new Exception("challengeFailedPinNeeded");
+        }
       }
     }
 
