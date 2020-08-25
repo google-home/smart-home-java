@@ -144,7 +144,6 @@ public class MySmartHomeApp extends SmartHomeApp {
         Map<String, Object> deviceState = database.getState(userId, device.id);
         deviceState.put("status", "SUCCESS");
         deviceStates.put(device.id, deviceState);
-        ReportState.makeRequest(this, userId, device.id, deviceState);
       } catch (Exception e) {
         LOGGER.error("QUERY FAILED: {}", e);
         Map<String, Object> failedDevice = new HashMap<>();
