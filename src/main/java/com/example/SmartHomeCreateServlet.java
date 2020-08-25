@@ -49,7 +49,7 @@ public class SmartHomeCreateServlet extends HttpServlet {
   {
     try {
       GoogleCredentials credentials =
-          GoogleCredentials.fromStream(getClass().getResourceAsStream("smart-home-key.json"));
+          GoogleCredentials.fromStream(getClass().getResourceAsStream("/smart-home-key.json"));
       actionsApp.setCredentials(credentials);
     } catch (Exception e) {
       LOGGER.error("couldn't load credentials");
