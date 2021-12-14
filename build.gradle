@@ -37,8 +37,7 @@ repositories {
 
 dependencies {
   providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
-
-  implementation 'org.slf4j:slf4j-log4j12:1.7.28'
+  
   implementation 'org.jetbrains:annotations:13.0'
 
   implementation 'com.google.actions:actions-on-google:1.8.0'

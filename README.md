@@ -27,8 +27,9 @@ git clone https://github.com/actions-on-google/smart-home-frontend.git
 
 ### Set up the Smart Home Action
 
-1. Use the [Actions console](https://console.actions.google.com) to add a new project with a name of your choosing and click **Create Project**.
-1. Select **Home Control**, then click **Smart Home**.
+1. Use the [Actions console](https://console.actions.google.com) to create a new project by clicking **New Project**.
+1. Enter a name of your choosing in the text box and click **Create Project**.
+1. Select the **Smart Home**, then click **Start Building**.
 
 ### Optional: Customize the Action
 
@@ -52,17 +53,23 @@ devices to Home Graph without a `QUERY` request.
 for your project ID.
 1. Enable the [HomeGraph API](https://console.cloud.google.com/apis/api/homegraph.googleapis.com/overview).
 1. Navigate to the [Google Cloud Console API & Services page](https://console.cloud.google.com/apis/credentials).
-1. Select **Create Credentials** and create a **Service account key**.
-    1. Create a new Service account.
-    1. Use the role **Service Account > Service Account Token Creator**.
-1. Create the account and download a JSON file.
-   Save this as `src/main/resources/smart-home-key.json`.
+1. Select **Create Credentials** > **Service account**.
+    1. Provide a name for the service account and click **Create and continue**.
+    1. Select the role **Service Account Token Creator** and click **Continue**.
+    1. Click **Done**.
+1. Create a key for the service account key account, and download the JSON file.
+    1. Click the pencil icon beside the newly created service account.
+    1. Select **Keys** > **Add Key** > **Create new key**.
+    1. Create JSON key and save the file as `src/main/resources/smart-home-key.json`.
 
 ### Connect to Firebase
 
-1. Open your project in the Firebase console
-1. Select a Cloud Firestore database.
-1. Configure a `users` collection with a default user and a few default fields
+1. Open your project in the [Firebase console](https://console.firebase.google.com/).
+1. Select **Build** > **Firestore database**.
+1. Create a new database by clicking **Create database**.
+    1. Select the appropriate security rules for your database and click **Next** (We recommend using **test mode** for development, and updating your rules to **production mode** later.).
+    1. Select a Firestore location from the dropdown and click **Enable**.
+1. From the data tab, select **Start collection** to configure a `users` collection with a default user and a few default fields
 
 ```
     users\
