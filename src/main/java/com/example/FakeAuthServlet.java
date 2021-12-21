@@ -18,6 +18,7 @@ package com.example;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -36,7 +37,7 @@ public class FakeAuthServlet extends HttpServlet {
             URLDecoder.decode(req.getParameter("redirect_uri"), "UTF8"),
             "xxxxxx",
             req.getParameter("state"));
-    String loginUrl = res.encodeRedirectURL("/login?responseurl=" + redirectURL);
+    String loginUrl = res.encodeRedirectURL("/login?responseurl=" + URLEncoder.encode(redirectURL, "UTF8"));
     res.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
     res.setHeader("Location", loginUrl);
     res.getWriter().flush();
