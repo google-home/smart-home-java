@@ -46,7 +46,7 @@ public class MySmartHomeApp extends SmartHomeApp {
     res.setRequestId(syncRequest.requestId);
     res.setPayload(new SyncResponse.Payload());
 
-    String token = (String) headers.get("authorization");
+    String token = (String) headers.get("Authorization");
     String userId = "";
     try {
       userId = database.getUserId(token);
@@ -128,12 +128,12 @@ public class MySmartHomeApp extends SmartHomeApp {
     res.setRequestId(queryRequest.requestId);
     res.setPayload(new QueryResponse.Payload());
 
-    String token = (String) headers.get("authorization");
+    String token = (String) headers.get("Authorization");
     String userId = "";
     try {
       userId = database.getUserId(token);
     } catch (Exception e) {
-      LOGGER.error("failed to get user id for token: %d", headers.get("authorization"));
+      LOGGER.error("failed to get user id for token: %d", headers.get("Authorization"));
       res.payload.setErrorCode("authFailure");
       return res;
     }
@@ -161,12 +161,12 @@ public class MySmartHomeApp extends SmartHomeApp {
   public ExecuteResponse onExecute(ExecuteRequest executeRequest, Map<?, ?> headers) {
     ExecuteResponse res = new ExecuteResponse();
 
-    String token = (String) headers.get("authorization");
+    String token = (String) headers.get("Authorization");
     String userId = "";
     try {
       userId = database.getUserId(token);
     } catch (Exception e) {
-      LOGGER.error("failed to get user id for token: %d", headers.get("authorization"));
+      LOGGER.error("failed to get user id for token: %d", headers.get("Authorization"));
       res.setPayload(new ExecuteResponse.Payload());
       res.payload.setErrorCode("authFailure");
       return res;
@@ -265,7 +265,7 @@ public class MySmartHomeApp extends SmartHomeApp {
   @NotNull
   @Override
   public void onDisconnect(DisconnectRequest disconnectRequest, Map<?, ?> headers) {
-    String token = (String) headers.get("authorization");
+    String token = (String) headers.get("Authorization");
     try {
       String userId = database.getUserId(token);
       database.setHomegraph(userId, false);
