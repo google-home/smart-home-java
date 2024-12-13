@@ -1,13 +1,13 @@
-# Actions on Google: Smart Home sample using Java
+# Cloud-to-cloud integrations: Smart Home sample using Java
 
 This sample contains a fully functioning example of a Smart Home provider cloud
 service. This sample is intended to be used together with a Smart Home project
-you create in the [Actions console](https://console.actions.google.com), to demonstrate how to integrate
+you create in the [Google Home Developer Console](https://console.home.google.com), to demonstrate how to integrate
 smart devices with the Google Assistant.
 
 This sample includes the following features to help you get started:
 
-- Fulfillment backend for Smart Home Action.
+- Fulfillment backend for Cloud-to-cloud integrations.
 - Mocked user authentication backend which comes prepopulated with sample users.
 - Web frontend with an interactive experience for users to control smart devices.
 
@@ -25,18 +25,18 @@ git clone https://github.com/actions-on-google/smart-home-frontend.git
 
 ## Run the sample
 
-### Set up the Smart Home Action
+### Set up the Cloud-to-cloud integration
 
-1. Use the [Actions console](https://console.actions.google.com) to create a new project by clicking **New Project**.
+1. Use the [Developer console](https://console.home.google.com) to create a new project by clicking **New Project**.
 1. Enter a name of your choosing in the text box and click **Create Project**.
 1. Select the **Smart Home**, then click **Start Building**.
 
-### Optional: Customize the Action
+### Optional: Customize the integration
 
 1. From the top menu under **Develop**, click **Invocation**.
-1. Add your Action's name. Click **Save**.
+1. Add your integration's name. Click **Save**.
 1. From the top menu under **DEPLOY**, click **Directory Information**.
-1. Add your Action info, including images, a contact email, and privacy policy. This information can all be edited before submitting for review.
+1. Add your integration info, including images, a contact email, and privacy policy. This information can all be edited before submitting for review.
 1. Click **Save**.
 
 ### Add Request Sync and Report State support
@@ -105,8 +105,8 @@ npm run serve
 
 ### Start testing
 
-1. Navigate back to the [Actions console](https://console.actions.google.com).
-1. From the top menu under **Develop**, click on **Actions** (left nav). Click **Add your first action** and choose your app's language(s).
+1. Navigate back to the [Developer console](https://console.home.google.com).
+1. From the top menu under **Develop**, click on **Cloud-to-cloud** (left nav). Click **Add integration** and choose your app's language(s).
 1. Enter the URL for fulfillment and click **Done**.
     1. If using Google App Engine, the URL will be https://{project-id}.appspot.com/smarthome
 1. On the left navigation menu under **ADVANCED OPTIONS**, click on **Account Linking**.
